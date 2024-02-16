@@ -78,9 +78,9 @@ class Fish(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("fs",))
     async def fishstats(self, ctx: commands.Context, target: Optional[twitchio.User]):
-        f"""
-        Shows the number of fish you have caught; can be used with a target:
-        {self.bot.prefixes[0]}fishcount <target>
+        """
+        Shows your stats (fish count, exp and level) from fishing; can be used with a target:
+        ?fishstats <target>
         """
         target = target if target else ctx.author
         count = await database.fish_count(target.id)

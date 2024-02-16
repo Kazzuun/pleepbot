@@ -19,7 +19,7 @@ class Moderator(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def pyramid(self, ctx: commands.Context, size: int, *words):
-        f"""Makes a pyramid of given size with given message; {self.bot.prefixes[0]}pyramid <size> <message>"""
+        """Makes a pyramid of given size with given message; ?pyramid <size> <message>"""
         if len(words) == 0:
             return
         message = " ".join(words)
@@ -34,10 +34,10 @@ class Moderator(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def countdown(self, ctx: commands.Context, start: int, interval: int = 1):
-        f"""
+        """
         Counts down to 1 from given starting point (min 3, max 10); 
         waits a specified number of seconds between counts (min 1, max 10);
-        {self.bot.prefixes[0]}countdown <start> <interval>
+        ?countdown <start> <interval>
         """
         start = max(min(start, 10), 3)
         interval = max(min(interval, 10), 1)

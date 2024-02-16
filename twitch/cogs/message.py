@@ -20,11 +20,11 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("randommessage", "randomessage", "randmsg"))
     async def rm(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter], *args):
-        f"""
+        """
         Sends a random message from chat logs from target, no target for your own, "all" for everyone;
         filters can be added to reduce possible messages: > or < followed by a number to specify 
         length of the message, + or - followed by a word to include or exclude the word, 
-        only one of each can be used; {self.bot.prefixes[0]}rm <optional target> <optional filters>
+        only one of each can be used; ?rm <optional target> <optional filters>
         """
         filters = ("<", ">", "+", "-")
 
@@ -79,11 +79,11 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("nofmessages",))
     async def nofm(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter], *args):
-        f"""
+        """
         Sends the number of messages sent by target, no target for your own, "all" for everyone;
         filters can be added to reduce possible messages: < or > followed by a number to specify 
         length of the message, + or - followed by a word to include or exclude words; 
-        only one of each can be used; {self.bot.prefixes[0]}nofm <optional target> <optional filters>
+        only one of each can be used; ?nofm <optional target> <optional filters>
         """
         filters = ("<", ">", "+", "-")
 
@@ -140,7 +140,7 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("emotecount",))
     async def ecount(self, ctx: commands.Context, emote: str):
-        f"""Shows the number of times an emote has been used; {self.bot.prefixes[0]}ecount <emote>"""
+        """Shows the number of times an emote has been used; ?ecount <emote>"""
         channel = await ctx.channel.user()
         global_emotes = await seventv.global_emotes()
         channel_emotes = await seventv.channel_emotes(channel.id)
@@ -156,9 +156,9 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("lastseen",))
     async def ls(self, ctx: commands.Context, target: twitchio.User):
-        f"""
+        """
         Tells how much time since the target's last message in the current chat, 
-        includes the last message; {self.bot.prefixes[0]}ls <target>
+        includes the last message; ?ls <target>
         """
         user = target.name
         if user == ctx.author.name:
@@ -178,9 +178,9 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def stalk(self, ctx: commands.Context, target: twitchio.User):
-        f"""
+        """
         Tells how much time since the target's last message in any chat the bot is in, 
-        includes the last message; {self.bot.prefixes[0]}stalk <target>
+        includes the last message; ?stalk <target>
         """
         user = target.name
         if user == ctx.author.name:

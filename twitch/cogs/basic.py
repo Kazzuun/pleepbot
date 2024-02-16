@@ -64,7 +64,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def choose(self, ctx: commands.Context, *args):
-        f"""Picks one of the given choises; {self.bot.prefixes[0]}choose <choise1> <choise1> <choise1>..."""
+        """Picks one of the given choises; ?choose <choise1> <choise1> <choise1>..."""
         if len(args) == 0:
             return
         await self.bot.message_queues.queue_command(ctx, random.choice(args))
@@ -73,7 +73,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def shuffle(self, ctx: commands.Context, word: str):
-        f"""Shuffles the given word randomly; {self.bot.prefixes[0]}shuffle <word>"""
+        """Shuffles the given word randomly; ?shuffle <word>"""
         letters = list(word)
         random.shuffle(letters)
         await self.bot.message_queues.queue_command(ctx, "".join(letters))
@@ -82,9 +82,9 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def iq(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
-        f"""
+        """
         A random number from a normal distribution with standard deviation of 15 
-        and mean of 100; can be used with a target: {self.bot.prefixes[0]}iq <target>
+        and mean of 100; can be used with a target: ?iq <target>
         """
         target = target.name if target else ctx.author.name
         await self.bot.message_queues.queue_command(ctx, f"_{target}'s IQ is {round(numpy.random.normal(100, 15))}")
@@ -93,7 +93,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def slap(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
-        f"""Slaps the given target: {self.bot.prefixes[0]}slap <target>"""
+        """Slaps the given target: ?slap <target>"""
         target = ctx.author.name if target is None or target.name == self.bot.nick else target.name
         await self.bot.message_queues.queue_command(ctx, f"/me slaps {target} around with a large trout", targets=(target,))
 
@@ -101,7 +101,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def tuck(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter], emote: Optional[str]):
-        f"""Tucks the target to bed; {self.bot.prefixes[0]}tuck <target> <optional emote>"""
+        """Tucks the target to bed; ?tuck <target> <optional emote>"""
         target = target.name if target else "themselves"
         channel_id = await database.channel_id(ctx.channel.name)
         emotes = await seventv.channel_emotes(channel_id)
@@ -113,7 +113,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def hug(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
-        f"""Hugs the target; {self.bot.prefixes[0]}hug <target>"""
+        """Hugs the target; ?hug <target>"""
         target = target.name if target else "themselves"
 
         emote = await seventv.best_fitting_emote(
@@ -126,9 +126,9 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
     @commands.command()
     async def roll(self, ctx: commands.Context, *rolls):
-        f"""
-        Rolls dice: {self.bot.prefixes[0]}roll for default 20 sided roll; 
-        {self.bot.prefixes[0]}roll <number of rolls>d<sides on die>...
+        """
+        Rolls dice: ?roll for default 20 sided roll; 
+        ?roll <number of rolls>d<sides on die>...
         """
         rolled = []
         for roll in rolls:
@@ -183,7 +183,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
     @commands.command()
     async def repeat(self, ctx: commands.Context, count: int, *words):
-        f"""Repeats a given message specified number of times; {self.bot.prefixes[0]}repeat <count> <message>"""
+        """Repeats a given message specified number of times; ?repeat <count> <message>"""
         if len(words) == 0 or count < 1:
             return
         message = " ".join(words)

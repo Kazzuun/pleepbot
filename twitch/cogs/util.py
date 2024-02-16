@@ -38,7 +38,7 @@ class Util(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def silent(self, ctx: commands.Context, switch: Optional[str]):
-        f"""Silences pings from commands; can be toggled back on with {self.bot.prefixes[0]}silent off"""
+        """Silences pings from commands; can be toggled back on with ?silent off"""
         if switch in ("off", "disable"):
             success = await database.enable_pings(ctx.author.id)
             if success:
@@ -56,9 +56,9 @@ class Util(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def optout(self, ctx: commands.Context, *args):
-        f"""
-        Opts out of getting targeted with commands; {self.bot.prefixes[0]}optout <command1> <command2>...
-        or to optout from every possible command {self.bot.prefixes[0]}optout all
+        """
+        Opts out of getting targeted with commands; ?optout <command1> <command2>...
+        or to optout from every possible command ?optout all
         """
         if len(args) == 0:
             return
@@ -87,9 +87,9 @@ class Util(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def optin(self, ctx: commands.Context, *args):
-        f"""
-        Opts in to be able to be target with commands again; {self.bot.prefixes[0]}optin <command1> <command2>...
-        or to optin to every possible command {self.bot.prefixes[0]}optout all
+        """
+        Opts in to be able to be target with commands again; ?optin <command1> <command2>...
+        or to optin to every possible command ?optout all
         """
         if len(args) == 0:
             return
@@ -116,7 +116,7 @@ class Util(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def help(self, ctx: commands.Context, command: str):
-        f"""Shows help for the given command; {self.bot.prefixes[0]}help <command>"""
+        """Shows help for the given command; ?help <command>"""
         cmd = self.bot.get_command(command)
         if cmd is None:
             await self.bot.message_queues.queue_command(ctx, "Given command doesn't exist", reply=True)
