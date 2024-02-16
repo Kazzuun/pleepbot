@@ -113,7 +113,7 @@ async def blocked_words() -> list[str]:
             FROM blocked_words;
             """
         ) as cursor:
-            return await cursor.fetchall()
+            return [word[0] for word in await cursor.fetchall()]
 
 
 async def block_words(words: list[str]) -> int:
