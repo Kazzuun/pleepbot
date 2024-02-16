@@ -80,12 +80,9 @@ class Bot(commands.Bot):
                 logger.info("Banned user %s (%s) tried to use a command '%s' in #%s", sender, str(message.author.id), message.content, channel)
             return
 
-        # Handle the command
-        await self.handle_commands(message)
-
         # Queue possible notifications for the user
         for notif in await database.sendable_notifications(channel, sender):
-            if notif.reminderType == database.ReminderType.NOTIFY:
+            if notif.reminder_type == database.ReminderType.NOTIFY:
                 notif.channel = channel
             try:
                 await self.message_queues.queue_reminder(notif)
@@ -93,6 +90,11 @@ class Bot(commands.Bot):
             except KeyError:
                 await database.cancel_reminder(notif.id)
                 logger.warning("Notification not sent: %s", str(notif))
+            except Filtered:
+                await database.cancel_reminder(notif.id)
+
+        # Handle the command
+        await self.handle_commands(message)
 
         if (random.random() < 0.15 and 
             not message.content.startswith(self.prefixes) and 
@@ -111,11 +113,8 @@ class Bot(commands.Bot):
         # Make commands case insensitive
         message.content = f"{elem[0].lower()} {' '.join(elem[1:])}"
 
-        # Allow specifying a target with an underscore as not to ping the target
-        if len(message.content.split()) > 1:
-            first_arg = message.content.split()[1]
-            if first_arg.startswith("_"):
-                message.content = message.content.replace(first_arg, first_arg[1:], 1)
+        # Allow using _ before targets, for example
+        message.content = " ".join([word[1:] if word.startswith("_") else word for word in message.content.split()])
         await super().handle_commands(message)
 
 
@@ -140,7 +139,7 @@ class Bot(commands.Bot):
             pass
 
         elif isinstance(error, commands.CommandNotFound):
-            pass
+            return
 
         else:
             traceback.print_exception(type(error), error, error.__traceback__)
@@ -157,16 +156,21 @@ class Bot(commands.Bot):
         """Global check if a target has opted out of the command or is banned"""
         if len(ctx.args) == 0:
             return True
-        for arg in ctx.args:
-            if isinstance(arg, twitchio.User):
-                if ctx.author.name != arg.name and await database.has_opted_out(arg.id, ctx.command.name):
-                    await self.message_queues.queue_command(ctx, "Target has opted out of that command")
-                    return False
-                elif await database.is_banned(arg.id):
-                    return False
-            elif isinstance(arg, twitchio.PartialChatter) and ctx.author.name != arg.name and await database.has_opted_out(arg.name, ctx.command.name, username=True):
-                await self.message_queues.queue_command(ctx, "Target has opted out of that command")
-                return False
+        
+        users = [arg for arg in ctx.args if isinstance(arg, twitchio.User) and ctx.author.name != arg.name]
+        chatters = [arg for arg in ctx.args if isinstance(arg, twitchio.PartialChatter) and ctx.author.name != arg.name]
+
+        if any([await database.has_opted_out(user.id, ctx.command.name) for user in users]):
+            await self.message_queues.queue_command(ctx, "Target has opted out of that command")
+            return False
+        elif any([await database.is_banned(user.id) for user in users]):
+            return False
+
+        elif any([await database.has_opted_out(chatter.name, ctx.command.name, username=True) for chatter in chatters]):
+            await self.message_queues.queue_command(ctx, "Target has opted out of that command")
+            return False
+        elif any([await database.is_banned(chatter.name, username=True) for chatter in chatters]):
+            return False
 
         return True
 
@@ -182,6 +186,8 @@ class Bot(commands.Bot):
             except KeyError:
                 await database.cancel_reminder(reminder.id)
                 logger.warning("Reminder not sent: %s", str(reminder))
+            except Filtered:
+                await database.cancel_reminder(reminder.id)
 
 
     @routines.routine(time=datetime(2024, 1, 1))

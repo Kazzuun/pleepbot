@@ -28,15 +28,15 @@ class Roles(Enum):
     BANNED = "banned"
 
 
-async def user_role(twitch_id: Union[str, int]) -> str:
+async def user_role(user_or_id: Union[str, int], *, username: bool = False) -> str:
     async with aiosqlite.connect(db_path) as db:
         async with db.execute(
-            """
+            f"""
             SELECT role
             FROM users 
-            WHERE twitch_id = ?;
+            WHERE {"username = ?" if username else "twitch_id = ?"};
             """,
-            (str(twitch_id),),
+            (str(user_or_id),),
         ) as cursor:
             result = await cursor.fetchone()
             return Roles(result[0]) if result else Roles.DEFAULT
@@ -47,8 +47,8 @@ async def is_admin(twitch_id: Union[str, int]) -> bool:
     return role == Roles.ADMIN
 
 
-async def is_banned(twitch_id: Union[str, int]) -> bool:
-    role = await user_role(twitch_id)
+async def is_banned(user_or_id: Union[str, int], *, username: bool = False) -> bool:
+    role = await user_role(user_or_id)
     return role == Roles.BANNED
 
 

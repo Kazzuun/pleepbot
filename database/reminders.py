@@ -47,7 +47,7 @@ class Reminder:
         self.time_ellapsed_str: str = str(self.time_ellapsed).split(".")[0]
 
     async def formatted_message(self) -> str:
-        if self.reminderType == ReminderType.GN:
+        if self.reminder_type == ReminderType.GN:
             if self.time_ellapsed < timedelta(minutes=15):
                 message = "Go back to bed"
             elif self.time_ellapsed < timedelta(hours=3):
@@ -66,7 +66,7 @@ class Reminder:
             message = f"{message} _{self.target} {emote} ({self.time_ellapsed_str})"
             return message
 
-        elif self.reminderType == ReminderType.AFK:
+        elif self.reminder_type == ReminderType.AFK:
             emote = await seventv.best_fitting_emote(
                 await channel_id(self.channel),
                 lambda emote: ":d" in emote.lower() or "Happy" in emote or emote in ("happy", "YAAAY"),
@@ -89,7 +89,7 @@ class Reminder:
             else:
                 self.sender = f"_{self.sender}"
 
-            if self.reminderType == ReminderType.REMIND:
+            if self.reminder_type == ReminderType.REMIND:
                 remind_type = "reminder"
             else:
                 remind_type = "message"

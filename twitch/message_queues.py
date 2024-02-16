@@ -65,8 +65,11 @@ class MessageQueues:
         # Make sure the message doesn't contain any blocked words
         blocked_words = await database.blocked_words()
         for blocked_word in blocked_words:
-            if blocked_word.lower() in message.message.lower():
-                raise Filtered(f"Blocked word {blocked_word} found in message '{message.message}'")
+            blocked_word = blocked_word.lower()
+            message_words = message.message.lower().split()
+            for word in message_words:
+                if blocked_word in word and len(word) <= len(blocked_word) <= len(word) + 1:
+                    raise Filtered(f"Blocked word '{blocked_word}' found in message '{message.message}'")
 
         await self._queues[channel].put(message)
 

@@ -128,7 +128,7 @@ class Remind(commands.Cog):
                 target = "_" + target
             await self.bot.message_queues.queue_command(
                 ctx,
-                f"Reminding _{target} at {reminder_time.strftime('%d/%m/%Y, %H:%M:%S')} UTC (ID {reminder_id})", 
+                f"Reminding {target} at {reminder_time.strftime('%d/%m/%Y, %H:%M:%S')} UTC (ID {reminder_id})", 
                 reply=True
             )
         elif reminderType == ReminderType.NOTIFY:

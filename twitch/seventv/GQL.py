@@ -153,11 +153,11 @@ async def _modify_emoteset(
             message = tqe.errors[0]['message'].lower()
             if message.split()[0].isdigit():
                 message = " ".join(message.split()[1:])
-            raise SevenTVException(f"Failed to {action.lower()} emote ({message})")
+            raise SevenTVException(f"Failed to {action.value.lower()} emote ({message})")
         except TimeoutError:
-            raise SevenTVException(f"Failed to {action.lower()} emote (request timed out)")
+            raise SevenTVException(f"Failed to {action.value.lower()} emote (request timed out)")
 
-        if action == "ADD":
+        if action == Action.ADD:
             added_emote = [
                 emote["name"]
                 for emote in query_results["emoteSet"]["emotes"]
