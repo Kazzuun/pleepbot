@@ -48,11 +48,11 @@ class Fish(commands.Cog):
         channel_emotes.extend(global_emotes)
 
         most_used_emotes = await database.emote_counts(ctx.channel.name, channel_emotes)
-        emotes_ordered = most_used_emotes.most_common(n = 5)[::-1]
+        emotes_ordered = most_used_emotes.most_common(10)[::-1]
 
         fish_caught = random.choices(
             [(emote[0], i + 1) for i, emote in enumerate(emotes_ordered)], 
-            cum_weights=[j + 1 for j in range(len(emotes_ordered))], 
+            cum_weights=[(j + 1) ** 0.6 for j in range(len(emotes_ordered))], 
             k=total_fish_count
         )
         total_exp_amount = int(sum([1 / index * 30 for _, index in fish_caught]))
