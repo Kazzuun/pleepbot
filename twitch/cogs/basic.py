@@ -64,7 +64,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def choose(self, ctx: commands.Context, *args):
-        """Picks one of the given choises; ?choose <choise1> <choise1> <choise1>..."""
+        """Picks one of the given choises; {prefix}choose <choise1> <choise1> <choise1>..."""
         if len(args) == 0:
             return
         await self.bot.message_queues.queue_command(ctx, random.choice(args))
@@ -73,7 +73,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def shuffle(self, ctx: commands.Context, word: str):
-        """Shuffles the given word randomly; ?shuffle <word>"""
+        """Shuffles the given word randomly; {prefix}shuffle <word>"""
         letters = list(word)
         random.shuffle(letters)
         await self.bot.message_queues.queue_command(ctx, "".join(letters))
@@ -84,7 +84,7 @@ class Basic(commands.Cog):
     async def iq(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
         """
         A random number from a normal distribution with standard deviation of 15 
-        and mean of 100; can be used with a target: ?iq <target>
+        and mean of 100; can be used with a target: {prefix}iq <target>
         """
         target = target.name if target else ctx.author.name
         await self.bot.message_queues.queue_command(ctx, f"_{target}'s IQ is {round(numpy.random.normal(100, 15))}")
@@ -93,7 +93,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def slap(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
-        """Slaps the given target: ?slap <target>"""
+        """Slaps the given target: {prefix}slap <target>"""
         target = ctx.author.name if target is None or target.name == self.bot.nick else target.name
         await self.bot.message_queues.queue_command(ctx, f"/me slaps {target} around with a large trout", targets=(target,))
 
@@ -101,7 +101,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def tuck(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter], emote: Optional[str]):
-        """Tucks the target to bed; ?tuck <target> <optional emote>"""
+        """Tucks the target to bed; {prefix}tuck <target> <optional emote>"""
         target = target.name if target else "themselves"
         channel_id = await database.channel_id(ctx.channel.name)
         emotes = await seventv.channel_emotes(channel_id)
@@ -113,7 +113,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def hug(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
-        """Hugs the target; ?hug <target>"""
+        """Hugs the target; {prefix}hug <target>"""
         target = target.name if target else "themselves"
 
         emote = await seventv.best_fitting_emote(
@@ -127,8 +127,8 @@ class Basic(commands.Cog):
     @commands.command()
     async def roll(self, ctx: commands.Context, *rolls):
         """
-        Rolls dice: ?roll for default 20 sided roll; 
-        ?roll <number of rolls>d<sides on die>...
+        Rolls dice: {prefix}roll for default 20 sided roll; 
+        {prefix}roll <number of rolls>d<sides on die>...
         """
         rolled = []
         for roll in rolls:
@@ -183,7 +183,7 @@ class Basic(commands.Cog):
     @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
     @commands.command()
     async def repeat(self, ctx: commands.Context, count: int, *words):
-        """Repeats a given message specified number of times; ?repeat <count> <message>"""
+        """Repeats a given message specified number of times; {prefix}repeat <count> <message>"""
         if len(words) == 0 or count < 1:
             return
         message = " ".join(words)

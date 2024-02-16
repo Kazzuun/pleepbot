@@ -23,9 +23,9 @@ class Remind(commands.Cog):
     async def remind(self, ctx: commands.Context, target: twitchio.PartialChatter, *args):
         """
         Sends a reminder to target; in specified amount of time 
-        ?remind <target> <message> in <time>, at a specific time 
-        ?remind <target> <message> at <unix timestamp>, 
-        when they type next ?remind <target> <message>
+        {prefix}remind <target> <message> in <time>, at a specific time 
+        {prefix}remind <target> <message> at <unix timestamp>, 
+        when they type next {prefix}remind <target> <message>
         """
         if len(args) == 0:
             return
@@ -142,7 +142,7 @@ class Remind(commands.Cog):
     @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
     @commands.command(aliases=("goodnight",))
     async def gn(self, ctx: commands.Context, *, message: Optional[str] = None):
-        f"""{self.bot.nick} says goodnight to you and queues a goodmorning message to be sent when you type next"""
+        """{self.bot.nick} says goodnight to you and queues a goodmorning message to be sent when you type next"""
         await database.set_reminder(
             ctx.channel.name, ctx.author.name, ctx.author.name, ReminderType.GN, message
         )
@@ -175,7 +175,7 @@ class Remind(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("deleterem", "cancelrem", "canrem"))
     async def delrem(self, ctx: commands.Context, id: int):
-        """Deletes a reminder you have set; ?delrem <ID>"""
+        """Deletes a reminder you have set; {prefix}delrem <ID>"""
         if await database.is_admin(ctx.author.id):
             success = await database.cancel_reminder(id)
         else:

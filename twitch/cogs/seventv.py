@@ -42,7 +42,7 @@ class SevenTV(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def emote(self, ctx: commands.Context, emote_id: str):
-        """Sends the name of the emote matching the id; ?emote <emote id>"""
+        """Sends the name of the emote matching the id; {prefix}emote <emote id>"""
         if not seventv.is_valid_emoteid(emote_id):
             await self.bot.message_queues.queue_command(ctx, "Invalid emote id", reply=True)
             return
@@ -60,7 +60,7 @@ class SevenTV(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("randomemote", "randemote"))
     async def re(self, ctx: commands.Context, count: int):
-        """Sends random emotes(s) from the channel; ?re <count>"""
+        """Sends random emotes(s) from the channel; {prefix}re <count>"""
         count = min(max(count, 1), 20)
         emotes = await seventv.channel_emotes(ctx.channel_id)
         if len(emotes) == 0:
@@ -77,7 +77,7 @@ class SevenTV(commands.Cog):
         Searches for the given 7tv emote; filters can be specified: -e for exact match, 
         -c for case sensitive, -t to ignore tags, -z for zero width emotes 
         (as of 14/02/2024 filters in the 7tv api seem to be broken and may not work); 
-        ?search <emote> <filters>
+        {prefix}search <emote> <filters>
         """
         exact_match = "-e" in args
         case_sensitive = "-c" in args
@@ -101,9 +101,9 @@ class SevenTV(commands.Cog):
     async def add(self, ctx: commands.Context, emote: str, alias: Optional[str], *args):
         """
         Adds the given 7tv emote to the channel; emote can be specified with its name
-        or id, if a name is given, a search is done to find it (see ?help search
+        or id, if a name is given, a search is done to find it (see {prefix}help search
         for more info); an alias can be given to the emote; 
-        ?add <emote name or id> <optional alias> <search filters>
+        {prefix}add <emote name or id> <optional alias> <search filters>
         """
         if alias and alias.startswith("-"):
             args = args + (alias,)
@@ -133,7 +133,7 @@ class SevenTV(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def remove(self, ctx: commands.Context, emote_name: str):
-        """Removes given emote from the channel; ?remove <emote>"""
+        """Removes given emote from the channel; {prefix}remove <emote>"""
         emotes = await seventv.channel_emotes(ctx.channel_id)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
@@ -147,7 +147,7 @@ class SevenTV(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def rename(self, ctx: commands.Context, emote_name: str, new_name: str):
-        """Renames given emote to a new name; ?rename <emote> <new name>"""
+        """Renames given emote to a new name; {prefix}rename <emote> <new name>"""
         emotes = await seventv.channel_emotes(ctx.channel_id)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
@@ -166,7 +166,7 @@ class SevenTV(commands.Cog):
         the name of the emote must be an exact match but it can be searched with filters:
         -c for case insensitive, -i for the given word to be included in an emote name,
         -s for the emote to start with the given word, matching more than one emote 
-        results in an error; ?yoink <channel> <emote> <optinal alias> <filters>
+        results in an error; {prefix}yoink <channel> <emote> <optinal alias> <filters>
         """
         if alias and alias.startswith("-"):
             args = args + (alias,)

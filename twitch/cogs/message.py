@@ -24,7 +24,7 @@ class Message(commands.Cog):
         Sends a random message from chat logs from target, no target for your own, "all" for everyone;
         filters can be added to reduce possible messages: > or < followed by a number to specify 
         length of the message, + or - followed by a word to include or exclude the word, 
-        only one of each can be used; ?rm <optional target> <optional filters>
+        only one of each can be used; {prefix}rm <optional target> <optional filters>
         """
         filters = ("<", ">", "+", "-")
 
@@ -83,7 +83,7 @@ class Message(commands.Cog):
         Sends the number of messages sent by target, no target for your own, "all" for everyone;
         filters can be added to reduce possible messages: < or > followed by a number to specify 
         length of the message, + or - followed by a word to include or exclude words; 
-        only one of each can be used; ?nofm <optional target> <optional filters>
+        only one of each can be used; {prefix}nofm <optional target> <optional filters>
         """
         filters = ("<", ">", "+", "-")
 
@@ -140,7 +140,7 @@ class Message(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("emotecount",))
     async def ecount(self, ctx: commands.Context, emote: str):
-        """Shows the number of times an emote has been used; ?ecount <emote>"""
+        """Shows the number of times an emote has been used; {prefix}ecount <emote>"""
         channel = await ctx.channel.user()
         global_emotes = await seventv.global_emotes()
         channel_emotes = await seventv.channel_emotes(channel.id)
@@ -158,7 +158,7 @@ class Message(commands.Cog):
     async def ls(self, ctx: commands.Context, target: twitchio.User):
         """
         Tells how much time since the target's last message in the current chat, 
-        includes the last message; ?ls <target>
+        includes the last message; {prefix}ls <target>
         """
         user = target.name
         if user == ctx.author.name:
@@ -180,7 +180,7 @@ class Message(commands.Cog):
     async def stalk(self, ctx: commands.Context, target: twitchio.User):
         """
         Tells how much time since the target's last message in any chat the bot is in, 
-        includes the last message; ?stalk <target>
+        includes the last message; {prefix}stalk <target>
         """
         user = target.name
         if user == ctx.author.name:
