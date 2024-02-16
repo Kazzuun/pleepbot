@@ -55,6 +55,7 @@ class Bot(commands.Bot):
         self.check_reminders.start()
         self.database_backup.start()
         logger.info("Bot started")
+        print(f"Logged in as {self.nick}")
 
 
     async def event_message(self, message: twitchio.Message) -> None:
@@ -142,8 +143,9 @@ class Bot(commands.Bot):
             pass
 
         else:
-            logger.warning(
-                "[#%s] an error occured during the execution of %s's command <%s>: %s", 
+            traceback.print_exception(type(error), error, error.__traceback__)
+            logger.error(
+                "[#%s] an error occured during the execution of %s's command <%s>: %s",
                 ctx.channel.name, ctx.author.name, ctx.command.name, error
             )
             return
