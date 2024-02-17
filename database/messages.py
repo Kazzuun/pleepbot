@@ -88,6 +88,22 @@ async def emote_counts(channel: str, emotes: list[str], *, nof_messages_counted 
             return emote_counts
 
 
+def search_queries(
+    user: Optional[str], 
+    lt: Optional[int], 
+    gt: Optional[int], 
+    included: Optional[str], 
+    excluded: Optional[str]
+):
+    return f"""
+        {"AND sender = ?" if user else ""}
+        {"AND LENGTH(message) < ?" if lt else ""}
+        {"AND LENGTH(message) > ?" if gt else ""}
+        {"AND message LIKE ?" if included else ""}
+        {"AND message NOT LIKE ?" if excluded else ""}
+        """
+
+
 async def random_message(
     channel: str, 
     user: Optional[str], 
@@ -103,11 +119,7 @@ async def random_message(
             SELECT sender, message, sent_at
             FROM messages
             WHERE channel = ? 
-                {"AND sender = ?" if user else ""}
-                {"AND LENGTH(message) < ?" if lt else ""}
-                {"AND LENGTH(message) > ?" if gt else ""}
-                {"AND message LIKE ?" if included else ""}
-                {"AND message NOT LIKE ?" if excluded else ""}
+                {search_queries(user, lt, gt, included, excluded)}
             ORDER BY RANDOM()
             LIMIT 1;
             """,
@@ -134,11 +146,7 @@ async def nofmessages(
             SELECT COUNT(*) 
             FROM messages
             WHERE channel = ?
-                {"AND sender = ?" if user else ""}
-                {"AND LENGTH(message) < ?" if lt else ""}
-                {"AND LENGTH(message) > ?" if gt else ""}
-                {"AND message LIKE ?" if included else ""}
-                {"AND message NOT LIKE ?" if excluded else ""};
+                {search_queries(user, lt, gt, included, excluded)};
             """,
             (channel,) + tuple(arg for arg in (user, lt, gt, included, excluded) if arg is not None)
         ) as cursor:

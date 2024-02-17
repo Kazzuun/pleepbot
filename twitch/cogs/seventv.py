@@ -71,9 +71,13 @@ class SevenTV(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("randomemote", "randemote"))
-    async def re(self, ctx: commands.Context, count: int):
+    async def re(self, ctx: commands.Context, *args):
         """Sends random emotes(s) from the channel; {prefix}re <count>"""
-        count = min(max(count, 1), 20)
+        try: 
+            count = int(args[0])
+            count = min(max(count, 1), 20)
+        except ValueError:
+            count = 1
         emotes = await seventv.channel_emotes(ctx.channel_id)
         if len(emotes) == 0:
             await self.bot.message_queues.queue_command(ctx, "Current channel doesn't have any 7tv emotes", reply=True)
@@ -174,11 +178,12 @@ class SevenTV(commands.Cog):
     @commands.command()
     async def yoink(self, ctx: commands.Context, target_channel: twitchio.User, emote_name: str, alias: Optional[str], *args):
         """
-        Yoinks an emote from the specified channel; a new alias can be specified;
+        Yoinks an emote from the specified channel; an alias can be specified;
         the name of the emote must be an exact match but it can be searched with filters:
         -c for case insensitive, -i for the given word to be included in an emote name,
         -s for the emote to start with the given word, matching more than one emote 
-        results in an error; {prefix}yoink <channel> <emote> <optinal alias> <filters>
+        gives all the emotes it matched without adding any;
+        {prefix}yoink <channel> <emote> <optional alias> <filters>
         """
         if alias and alias.startswith("-"):
             args = args + (alias,)

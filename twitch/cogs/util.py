@@ -38,7 +38,7 @@ class Util(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def silent(self, ctx: commands.Context, switch: Optional[str]):
-        """Silences pings from commands; can be toggled back on with {prefix}silent of"""
+        """Silences pings from commands; can be toggled back on with {prefix}silent off"""
         if switch in ("off", "disable"):
             success = await database.enable_pings(ctx.author.id)
             if success:

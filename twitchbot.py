@@ -156,7 +156,7 @@ class Bot(commands.Bot):
         """Global check if a target has opted out of the command or is banned"""
         if len(ctx.args) == 0:
             return True
-        
+
         users = [arg for arg in ctx.args if isinstance(arg, twitchio.User) and ctx.author.name != arg.name]
         chatters = [arg for arg in ctx.args if isinstance(arg, twitchio.PartialChatter) and ctx.author.name != arg.name]
 

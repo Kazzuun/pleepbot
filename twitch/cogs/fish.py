@@ -108,7 +108,7 @@ class Fish(commands.Cog):
         level = self.level_from_exp(exp)
         await self.bot.message_queues.queue_command(
             ctx, 
-            f"_{target.name} has fished {count} fish, has {exp} exp, and is level {level}"
+            f"_{target.name} has caught {count} fish, has {exp} exp, and is level {level}"
         )
 
 

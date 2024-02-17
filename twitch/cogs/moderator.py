@@ -33,15 +33,20 @@ class Moderator(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
-    async def countdown(self, ctx: commands.Context, start: int, interval: int = 1):
+    async def countdown(self, ctx: commands.Context, start: int = 5, *args):
         """
         Counts down to 1 from given starting point (min 3, max 10); 
         waits a specified number of seconds between counts (min 1, max 10);
         {prefix}countdown <start> <interval>
         """
         start = max(min(start, 10), 3)
-        interval = max(min(interval, 10), 1)
-        for i in range(start, 0, -1):
+        try:
+            interval = float(args[0])
+            interval = max(min(interval, 10), 1)
+        except ValueError:
+            interval = 1.0
+
+        for i in range(start, -1, -1):
             await asyncio.sleep(interval)
             await self.bot.message_queues.queue_command(ctx, f"{i}")
 

@@ -37,7 +37,7 @@ class Message(commands.Cog):
                 args = args + (target.name,)
                 target = ctx.author.name
             else:
-                target = target.name
+                target = target.name.lower()
 
         lt = None
         gt = None
@@ -96,7 +96,7 @@ class Message(commands.Cog):
                 args = args + (target.name,)
                 target = ctx.author.name
             else:
-                target = target.name
+                target = target.name.lower()
 
         lt = None
         gt = None

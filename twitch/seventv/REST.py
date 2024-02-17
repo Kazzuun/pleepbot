@@ -41,7 +41,7 @@ async def global_emotes() -> list[dict[str, str]]:
             raise SevenTVException("Failed to fetch global emotes (request timed out)")
 
 
-# @memoize_async(ttl=timedelta(hours=6))
+@memoize_async(ttl=timedelta(minutes=10))
 async def _channel_info(twitch_id: Union[str, int]) -> dict:
     """
     """
@@ -105,6 +105,7 @@ async def seventv_user_id(twitch_id: Union[str, int]) -> str:
     return userid
 
 
+@memoize_async()
 async def emoteset_id(twitch_id: Union[str, int]) -> str:
     response = await _channel_info(twitch_id)
     if response is None:
