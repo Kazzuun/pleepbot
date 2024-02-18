@@ -41,8 +41,8 @@ async def global_emotes() -> list[dict[str, str]]:
             raise SevenTVException("Failed to fetch global emotes (request timed out)")
 
 
-@memoize_async(ttl=timedelta(minutes=10))
-async def _channel_info(twitch_id: Union[str, int]) -> dict:
+@memoize_async(ttl=timedelta(hours=3))
+async def _channel_info(twitch_id: Union[str, int], *, force: bool = False) -> dict:
     """
     """
     async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
@@ -114,8 +114,8 @@ async def emoteset_id(twitch_id: Union[str, int]) -> str:
     return emoteset_id
 
 
-async def channel_emotes(twitch_id: Union[str, int]) -> list[dict[str, str]]:
-    response = await _channel_info(twitch_id)
+async def channel_emotes(twitch_id: Union[str, int], *, force: bool = False) -> list[dict[str, str]]:
+    response = await _channel_info(twitch_id, force=force)
     if response is None:
         return []
     emotes = [

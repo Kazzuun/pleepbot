@@ -76,7 +76,7 @@ class SevenTV(commands.Cog):
         try: 
             count = int(args[0])
             count = min(max(count, 1), 20)
-        except ValueError:
+        except (ValueError, IndexError):
             count = 1
         emotes = await seventv.channel_emotes(ctx.channel_id)
         if len(emotes) == 0:
@@ -114,16 +114,16 @@ class SevenTV(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
-    async def add(self, ctx: commands.Context, emote: str, alias: Optional[str], *args):
+    async def add(self, ctx: commands.Context, emote: str, *args):
         """
         Adds the given 7tv emote to the channel; emote can be specified with its name
         or id, if a name is given, a search is done to find it (see {prefix}help search
         for more info); an alias can be given to the emote; 
         {prefix}add <emote name or id> <optional alias> <search filters>
         """
-        if alias and alias.startswith("-"):
-            args = args + (alias,)
-            alias = None
+        alias = None
+        if len(args) > 0:
+            alias = args[0]
 
         if seventv.is_valid_emoteid(emote):
             emote_id = emote
@@ -150,7 +150,7 @@ class SevenTV(commands.Cog):
     @commands.command()
     async def remove(self, ctx: commands.Context, emote_name: str):
         """Removes given emote from the channel; {prefix}remove <emote>"""
-        emotes = await seventv.channel_emotes(ctx.channel_id)
+        emotes = await seventv.channel_emotes(ctx.channel_id, force=True)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
             raise SevenTVException("No emote with given name found")
@@ -164,7 +164,7 @@ class SevenTV(commands.Cog):
     @commands.command()
     async def rename(self, ctx: commands.Context, emote_name: str, new_name: str):
         """Renames given emote to a new name; {prefix}rename <emote> <new name>"""
-        emotes = await seventv.channel_emotes(ctx.channel_id)
+        emotes = await seventv.channel_emotes(ctx.channel_id, force=True)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
             raise SevenTVException("No emote with given name found")
@@ -176,7 +176,7 @@ class SevenTV(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
-    async def yoink(self, ctx: commands.Context, target_channel: twitchio.User, emote_name: str, alias: Optional[str], *args):
+    async def yoink(self, ctx: commands.Context, target_channel: twitchio.User, emote_name: str, *args):
         """
         Yoinks an emote from the specified channel; an alias can be specified;
         the name of the emote must be an exact match but it can be searched with filters:
@@ -185,11 +185,11 @@ class SevenTV(commands.Cog):
         gives all the emotes it matched without adding any;
         {prefix}yoink <channel> <emote> <optional alias> <filters>
         """
-        if alias and alias.startswith("-"):
-            args = args + (alias,)
-            alias = None
+        alias = None
+        if len(args) > 0:
+            alias = args[0]
 
-        channel_emotes = await seventv.channel_emotes(target_channel.id)
+        channel_emotes = await seventv.channel_emotes(target_channel.id, force=True)
 
         def emotes_match(emote: str, emote_query: str) -> bool:
             if "-c" in args:
@@ -209,7 +209,7 @@ class SevenTV(commands.Cog):
         elif len(emotes) > 1:
             raise SevenTVException(f"More than one emote match given query: {', '.join([emote['name'] for emote in emotes])}")
         emote = emotes[0]
-        alias = alias if alias else emote['name']
+        alias = alias if alias else emote_name
 
         added_emote = await seventv.add_emote(ctx.channel_id, emote['id'], alias)
         await self.bot.message_queues.queue_command(ctx, f"Added emote {added_emote}")

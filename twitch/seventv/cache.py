@@ -17,7 +17,7 @@ def memoize_async(*, ttl: Optional[timedelta] = None):
         async def wrapper(*args, **kwargs):
             if args in cache:
                 result, expiration_time = cache[args]
-                if ttl and datetime.utcnow() > expiration_time:
+                if (ttl and datetime.utcnow() > expiration_time) or kwargs.get("force"):
                     del cache[args]
                 else:
                     return result

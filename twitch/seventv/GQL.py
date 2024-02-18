@@ -129,10 +129,10 @@ async def _modify_emoteset(
     async with Client(transport=transport) as session:
         query = gql(
             """
-        mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID!) {
+        mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID!, $name: String) {
             emoteSet(id: $id) {
                 id
-                emotes(id: $emote_id action: $action) {
+                emotes(id: $emote_id action: $action, name: $name) {
                     id
                     name
                 }
