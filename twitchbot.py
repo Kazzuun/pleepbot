@@ -119,11 +119,17 @@ class Bot(commands.Bot):
 
 
     async def event_command_error(self, ctx: commands.Context, error: Exception) -> None:
-        if isinstance(error, SevenTVException):
-            await self.message_queues.queue_command(ctx, error.message)
-
-        elif isinstance(error, Filtered):
+        ignored_exceptions = (
+            commands.CheckFailure, 
+            commands.BadArgument, 
+            commands.ArgumentParsingFailed, 
+            Filtered
+        )
+        if any([isinstance(error, err) for err in ignored_exceptions]):
             pass
+
+        elif isinstance(error, SevenTVException):
+            await self.message_queues.queue_command(ctx, error.message)
 
         elif isinstance(error, commands.MissingRequiredArgument):
             await self.message_queues.queue_command(ctx, "You're missing an argument: " + error.name, reply=True)
@@ -131,12 +137,6 @@ class Bot(commands.Bot):
         elif isinstance(error, commands.CommandOnCooldown):
             if ctx.command.name in ("fortune", "fish"):
                 await self.message_queues.queue_command(ctx, error.args[0])
-
-        elif isinstance(error, commands.ArgumentParsingFailed):
-            pass
-
-        elif isinstance(error, commands.BadArgument):
-            pass
 
         elif isinstance(error, commands.CommandNotFound):
             return
@@ -161,15 +161,14 @@ class Bot(commands.Bot):
         chatters = [arg for arg in ctx.args if isinstance(arg, twitchio.PartialChatter) and ctx.author.name != arg.name]
 
         if any([await database.has_opted_out(user.id, ctx.command.name) for user in users]):
-            await self.message_queues.queue_command(ctx, "Target has opted out of that command")
+            await self.message_queues.queue_command(ctx, "Target has opted out of that command", reply=True)
             return False
         elif any([await database.is_banned(user.id) for user in users]):
             return False
-
-        elif any([await database.has_opted_out(chatter.name, ctx.command.name, username=True) for chatter in chatters]):
-            await self.message_queues.queue_command(ctx, "Target has opted out of that command")
+        elif any([await database.has_opted_out(chatter.name.lower(), ctx.command.name, username=True) for chatter in chatters]):
+            await self.message_queues.queue_command(ctx, "Target has opted out of that command", reply=True)
             return False
-        elif any([await database.is_banned(chatter.name, username=True) for chatter in chatters]):
+        elif any([await database.is_banned(chatter.name.lower(), username=True) for chatter in chatters]):
             return False
 
         return True

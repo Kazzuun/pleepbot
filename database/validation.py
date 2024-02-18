@@ -91,18 +91,17 @@ async def optin(twitch_id: Union[str, int], commands: list[str]) -> int:
 
 
 async def has_opted_out(user_or_id: Union[str, int], command: str, *, username: bool = False) -> bool:
-    if username:
-        async with aiosqlite.connect(db_path) as db:
-            async with db.execute(
-                f"""
-                SELECT twitch_id
-                FROM optouts 
-                WHERE command = ?
-                    {"AND username = ?" if username else "AND twitch_id = ?"};
-                """,
-                (str(user_or_id), command),
-            ) as cursor:
-                return await cursor.fetchone() is not None
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute(
+            f"""
+            SELECT twitch_id
+            FROM optouts 
+            WHERE command = ?
+                {"AND username = ?" if username else "AND twitch_id = ?"};
+            """,
+            (command, str(user_or_id)),
+        ) as cursor:
+            return await cursor.fetchone() is not None
 
 
 async def blocked_words() -> list[str]:

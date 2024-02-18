@@ -35,7 +35,7 @@ class Remind(commands.Cog):
         if target.name in ("me", "myself"):
             target = ctx.author.name
         else:
-            target = target.name
+            target = target.name.lower()
 
         in_position = -1
         for i, word in enumerate(args):
