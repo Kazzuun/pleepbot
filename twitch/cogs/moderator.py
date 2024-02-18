@@ -35,7 +35,7 @@ class Moderator(commands.Cog):
     @commands.command()
     async def countdown(self, ctx: commands.Context, start: int = 5, *args):
         """
-        Counts down to 1 from given starting point (min 3, max 10); 
+        Counts down to 0 from given starting point (min 3, max 10); 
         waits a specified number of seconds between counts (min 1, max 10);
         {prefix}countdown <start> <interval>
         """

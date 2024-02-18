@@ -30,7 +30,7 @@ class Basic(commands.Cog):
         """A number of users connected to the chat fetched from cache"""
         emote = await seventv.best_fitting_emote(
             await database.channel_id(ctx.channel.name), 
-            lambda emote: emote.lower() in ("uuh", "urm"),
+            lambda emote: emote.lower() in ("uuh", "urm", "erm", "orm"),
             default="Stare"
         )
         await self.bot.message_queues.queue_command(ctx, f"{len(ctx.chatters)} lurkers {emote}")

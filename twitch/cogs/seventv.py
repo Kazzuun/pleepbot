@@ -54,7 +54,7 @@ class SevenTV(commands.Cog):
     @commands.command()
     async def emotes(self, ctx: commands.Context, target: twitchio.PartialChatter):
         """Sends a link to a page that shows all emotes of the channel"""
-        await self.bot.message_queues.queue_command(ctx, f"https://emotes.raccatta.cc/twitch/{target.name}")
+        await self.bot.message_queues.queue_command(ctx, f"https://emotes.raccatta.cc/twitch/{target.name.lower()}")
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)

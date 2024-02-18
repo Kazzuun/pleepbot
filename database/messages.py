@@ -39,7 +39,7 @@ async def bot_last_message(channel: str) -> str:
             """
             SELECT message 
             FROM messages 
-            WHERE channel = ? AND sender = ?
+            WHERE channel = ? AND sender = ? and sent_at > DATETIME('now', '-30 seconds')
             ORDER BY id DESC;
             """,
             (channel, os.environ["BOT_NICK"]),
