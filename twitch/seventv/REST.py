@@ -1,7 +1,7 @@
 from datetime import timedelta
 import random
 import re
-from typing import Union, Callable
+from typing import Callable, Optional, Union
 
 import aiohttp
 
@@ -41,8 +41,7 @@ async def global_emotes() -> list[dict[str, str]]:
             raise SevenTVException("Failed to fetch global emotes (request timed out)")
 
 
-@memoize_async(ttl=timedelta(hours=3))
-async def _channel_info(twitch_id: Union[str, int], *, force: bool = False) -> dict:
+async def _channel_info(twitch_id: Union[str, int]) -> Optional[dict]:
     """
     """
     async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
@@ -58,6 +57,27 @@ async def _channel_info(twitch_id: Union[str, int], *, force: bool = False) -> d
                     raise SevenTVException(f"Something went wrong with fetching from api (status {resp.status})")
         except TimeoutError:
             raise SevenTVException("Failed to fetch 7tv info (request timed out)")
+
+
+async def _channel_emoteset(twitch_id: Union[str, int]) -> Optional[dict]:
+    """
+    Fetches emotes directly from the emoteset. This info updates more 
+    frequently than info gotten from /users/twitch/{twitch_id} route.
+    """
+    async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
+        emoteset = await emoteset_id(twitch_id)
+        url = f"{ENDPOINT}/emote-sets/{emoteset}"
+        try:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    response = await resp.json()
+                    return response
+                elif resp.status == 404:
+                    return None
+                else:
+                    raise SevenTVException(f"Something went wrong with fetching from api (status {resp.status})")
+        except TimeoutError:
+            raise SevenTVException("Failed to fetch 7tv emotes (request timed out)")
 
 
 @memoize_async()
@@ -114,13 +134,14 @@ async def emoteset_id(twitch_id: Union[str, int]) -> str:
     return emoteset_id
 
 
+@memoize_async(ttl=timedelta(hours=3))
 async def channel_emotes(twitch_id: Union[str, int], *, force: bool = False) -> list[dict[str, str]]:
-    response = await _channel_info(twitch_id, force=force)
+    response = await _channel_emoteset(twitch_id)
     if response is None:
         return []
     emotes = [
         {key: emote[key] for key in ("id", "name")}
-        for emote in response["emote_set"]["emotes"]
+        for emote in response["emotes"]
     ]
     return emotes
 

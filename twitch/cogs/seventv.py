@@ -153,7 +153,7 @@ class SevenTV(commands.Cog):
         emotes = await seventv.channel_emotes(ctx.channel_id, force=True)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
-            raise SevenTVException("No emote with given name found")
+            raise SevenTVException("No emote with given name found (you may need to wait a bit for 7tv's cache to update)")
         emote_id = target_emote[0]['id']
 
         await seventv.remove_emote(ctx.channel_id, emote_id)
@@ -167,7 +167,7 @@ class SevenTV(commands.Cog):
         emotes = await seventv.channel_emotes(ctx.channel_id, force=True)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
-            raise SevenTVException("No emote with given name found")
+            raise SevenTVException("No emote with given name found (you may need to wait a bit for 7tv's cache to update)")
         emote_id = target_emote[0]['id']
 
         await seventv.rename_emote(ctx.channel_id, emote_id, new_name)
