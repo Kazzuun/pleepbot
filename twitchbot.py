@@ -122,8 +122,7 @@ class Bot(commands.Bot):
         ignored_exceptions = (
             commands.CheckFailure, 
             commands.BadArgument, 
-            commands.ArgumentParsingFailed, 
-            Filtered
+            commands.ArgumentParsingFailed
         )
         if any([isinstance(error, err) for err in ignored_exceptions]):
             pass
@@ -136,7 +135,10 @@ class Bot(commands.Bot):
 
         elif isinstance(error, commands.CommandOnCooldown):
             if ctx.command.name in ("fortune", "fish"):
-                await self.message_queues.queue_command(ctx, error.args[0])
+                await self.message_queues.queue_command(ctx, error.args[0], reply=True)
+
+        elif isinstance(error, Filtered):
+            await self.message_queues.queue_command(ctx, "Message got blocked", reply=True)
 
         elif isinstance(error, commands.CommandNotFound):
             return
@@ -144,12 +146,12 @@ class Bot(commands.Bot):
         else:
             traceback.print_exception(type(error), error, error.__traceback__)
             logger.error(
-                "[#%s] an error occured during the execution of %s's command <%s>: %s",
+                "[#%s] %s: error using <%s>: %s",
                 ctx.channel.name, ctx.author.name, ctx.command.name, error
             )
             return
 
-        logger.debug("[#%s] %s's command <%s> failed: %s", ctx.channel.name, ctx.author.name, ctx.command.name, error)
+        logger.warning("[#%s] %s's command <%s> failed: %s", ctx.channel.name, ctx.author.name, ctx.command.name, error)
 
 
     async def global_check(self, ctx: commands.Context) -> bool:
