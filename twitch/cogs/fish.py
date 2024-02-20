@@ -22,7 +22,7 @@ class Fish(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=1*60*60, bucket=commands.Bucket.user)
-    @commands.command(aliases=("fishinge", "🐟"))
+    @commands.command(aliases=("fishinge", "fishingtime", "🐟"))
     async def fish(self, ctx: commands.Context, *args):
         """
         You go fishing; number of fish you catch is based on luck, fishing level, and time since last fished;
@@ -32,8 +32,7 @@ class Fish(commands.Cog):
         last_fished = await database.last_fished(ctx.author.id)
         seconds_ellapsed = (current_time - last_fished).seconds if last_fished else 1*60*60
 
-        minutes, _ = divmod(seconds_ellapsed, 60)
-        hours, _ = divmod(minutes, 60)
+        hours = 0 if seconds_ellapsed < 3600 else seconds_ellapsed / 3600
 
         exp_before = await database.fishing_exp(ctx.author.id)
         level_before = self.level_from_exp(exp_before)

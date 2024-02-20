@@ -25,7 +25,7 @@ class Basic(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
-    @commands.command()
+    @commands.command(aliases=("chatters",))
     async def lurkers(self, ctx: commands.Context):
         """A number of users connected to the chat fetched from cache"""
         emote = await seventv.best_fitting_emote(
@@ -37,7 +37,7 @@ class Basic(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=3*60*60, bucket=commands.Bucket.user)
-    @commands.command(aliases=("cookie", "🍪"))
+    @commands.command(aliases=("cookie", "🍪", "🥠"))
     async def fortune(self, ctx: commands.Context):
         """Tells a random fortune"""
         fortune = await database.fortune()
@@ -48,7 +48,7 @@ class Basic(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
-    @commands.command()
+    @commands.command(aliases=("coin",))
     async def flip(self, ctx: commands.Context):
         """Flips a 50/50 coin heads or tails (yes or no)"""
         await self.bot.message_queues.queue_command(ctx, random.choice(["Heads (Yes)", "Tails (No)"]), reply=True)
@@ -123,7 +123,7 @@ class Basic(commands.Cog):
         await self.bot.message_queues.queue_command(ctx, f"_{ctx.author.name} hugged {target} {emote}", targets=(target,))
 
 
-    @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def roll(self, ctx: commands.Context, *rolls):
         """
@@ -163,7 +163,7 @@ class Basic(commands.Cog):
         await self.bot.message_queues.queue_command(ctx, message)
 
 
-    @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def fill(self, ctx: commands.Context, *words):
         """Sends a message randomly filled with the given words"""
@@ -180,7 +180,7 @@ class Basic(commands.Cog):
         await self.bot.message_queues.queue_command(ctx, message, targets=words)
 
 
-    @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def repeat(self, ctx: commands.Context, count: int, *words):
         """Repeats a given message specified number of times; {prefix}repeat <count> <message>"""
