@@ -80,22 +80,25 @@ class Bot(commands.Bot):
                 logger.info("Banned user %s (%s) tried to use a command '%s' in #%s", sender, str(message.author.id), message.content, channel)
             return
 
-        # Queue possible notifications for the user
-        for notif in await database.sendable_notifications(channel, sender):
-            if notif.reminder_type == database.ReminderType.NOTIFY:
-                notif.channel = channel
-            try:
-                await self.message_queues.queue_reminder(notif)
-                await database.set_reminder_as_sent(notif.id)
-            except KeyError:
-                await database.cancel_reminder(notif.id)
-                logger.warning("Notification not sent: %s", str(notif))
-            except Filtered:
-                await database.cancel_reminder(notif.id)
+        # Get notifications before command
+        notifications_before = await database.sendable_notifications(channel, sender)
 
         # Handle the command
         await self.handle_commands(message)
 
+        # If there are more notifications after the command, ignore them
+        notifications = await database.sendable_notifications(channel, sender)
+        if len(notifications) > len(notifications_before):
+            notifications = notifications_before
+
+        # Queue possible notifications for the user
+        for notif in notifications:
+            # Change the channel in global notifications so that they get sent in the right channel
+            if notif.reminder_type == database.ReminderType.NOTIFY:
+                notif.channel = channel
+            await self.message_queues.queue_reminder(notif)
+
+        # Randomly send pleep whenever someone mentions it
         if (random.random() < 0.15 and 
             not message.content.startswith(self.prefixes) and 
             self.message_queues._queues[channel].qsize() == 0 and 
@@ -134,7 +137,7 @@ class Bot(commands.Bot):
             await self.message_queues.queue_command(ctx, "You're missing an argument: " + error.name, reply=True)
 
         elif isinstance(error, commands.CommandOnCooldown):
-            if ctx.command.name in ("fortune", "fish"):
+            if ctx.command.name in ("fortune",):
                 await self.message_queues.queue_command(ctx, error.args[0], reply=True)
 
         elif isinstance(error, Filtered):
@@ -181,14 +184,7 @@ class Bot(commands.Bot):
         """Routine to poll for reminders every second and send any found."""
         reminders = await database.sendable_reminders()
         for reminder in reminders:
-            try:
-                await self.message_queues.queue_reminder(reminder)
-                await database.set_reminder_as_sent(reminder.id)
-            except KeyError:
-                await database.cancel_reminder(reminder.id)
-                logger.warning("Reminder not sent: %s", str(reminder))
-            except Filtered:
-                await database.cancel_reminder(reminder.id)
+            await self.message_queues.queue_reminder(reminder)
 
 
     @routines.routine(time=datetime(2024, 1, 1))

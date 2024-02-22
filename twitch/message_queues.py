@@ -6,6 +6,7 @@ from twitchio.ext import commands
 
 import database
 from twitch.exceptions import Filtered
+from twitch.logging import logger
 
 
 class ISendableMessage:
@@ -17,7 +18,7 @@ class ISendableMessage:
 
 
 class CommandMessage(ISendableMessage):
-    def __init__(self, ctx: commands.Context, message: str, *, reply: bool = False):
+    def __init__(self, ctx: commands.Context, message: str, reply: bool = False):
         self.ctx = ctx
         self.message = message
         self.reply = reply
@@ -68,7 +69,7 @@ class MessageQueues:
             blocked_word = blocked_word.lower()
             message_words = message.message.lower().split()
             for word in message_words:
-                if blocked_word in word and len(word) <= len(blocked_word) <= len(word) + 1:
+                if blocked_word in word and len(word) <= len(blocked_word) + 1:
                     raise Filtered(f"Blocked word '{blocked_word}' found in message '{message.message}'")
 
         await self._queues[channel].put(message)
@@ -103,9 +104,9 @@ class MessageQueues:
         for target in targets:
             has_pings_muted = await database.silent_pings(target)
             if has_pings_muted:
-                message = " ".join(map(lambda word: f"_{word}" if target in word and not word.startswith("_") else word, message.split()))
+                message = " ".join(map(lambda word: f"_{word}" if target == word and not word.startswith("_") else word, message.split()))
 
-        await self._add_to_queue(ctx.channel.name, CommandMessage(ctx, message, reply=reply))
+        await self._add_to_queue(ctx.channel.name, CommandMessage(ctx, message, reply))
 
 
     async def queue_message(self, channel: str, message: str) -> None:
@@ -113,5 +114,14 @@ class MessageQueues:
 
 
     async def queue_reminder(self, reminder: database.Reminder) -> None:
-        await self._add_to_queue(reminder.channel, Message(self.bot, reminder.channel, await reminder.formatted_message()))
-
+        try:
+            await self._add_to_queue(reminder.channel, Message(self.bot, reminder.channel, await reminder.formatted_message()))
+            await database.set_reminder_as_sent(reminder.id)
+        except KeyError:
+            await database.cancel_reminder(reminder.id)
+            logger.warning("Reminder not sent: %s", str(reminder))
+        except Filtered:
+            logger.warning("Reminder message filtered: %s", str(reminder))
+            reminder.message = "<Message blocked>"
+            await self._add_to_queue(reminder.channel, Message(self.bot, reminder.channel, await reminder.formatted_message()))
+            await database.set_reminder_as_sent(reminder.id)

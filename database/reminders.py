@@ -85,16 +85,16 @@ class Reminder:
                 self.message = "(no message)"
 
             if self.sender == self.target:
-                self.sender = "yourself"
+                sender = "yourself"
             else:
-                self.sender = f"_{self.sender}"
+                sender = f"_{self.sender}"
 
             if self.reminder_type == ReminderType.REMIND:
                 remind_type = "reminder"
             else:
                 remind_type = "message"
 
-            return f"@{self.target}, {remind_type} from {self.sender} ({self.time_ellapsed_str} ago): {self.message}"
+            return f"@{self.target}, {remind_type} from {sender} ({self.time_ellapsed_str} ago): {self.message}"
 
 
 
@@ -148,7 +148,7 @@ async def sendable_reminders() -> list[Reminder]:
             """
             SELECT id, channel, sender, target, type, message, created_at, scheduled_at 
             FROM reminders 
-            WHERE scheduled_at IS NOT NULL AND scheduled_at < DATETIME() AND sent = 0 AND cancelled = 0;
+            WHERE scheduled_at IS NOT NULL AND scheduled_at < DATETIME('now', '1 seconds') AND sent = 0 AND cancelled = 0;
             """
         ) as cursor:
             return [
