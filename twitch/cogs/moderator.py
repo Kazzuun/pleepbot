@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 from twitchio.ext import commands
 
@@ -19,7 +20,7 @@ class Moderator(commands.Cog):
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def pyramid(self, ctx: commands.Context, size: int, *words):
-        """Makes a pyramid of given size with given message; {prefix}pyramid <size> <message>"""
+        """Makes a pyramid of given size with given message (mod/vip only); {prefix}pyramid <size> <message>"""
         if len(words) == 0:
             return
         message = " ".join(words)
@@ -33,20 +34,23 @@ class Moderator(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
-    async def countdown(self, ctx: commands.Context, start: int = 5, *args):
+    async def countdown(self, ctx: commands.Context, start: Optional[int] = 5, *args):
         """
         Counts down to 0 from given starting point (min 3, max 10); 
-        waits a specified number of seconds between counts (min 1, max 10);
-        {prefix}countdown <start> <interval>
+        waits a specified number of seconds between counts (min 1, max 10); 
+        (mod/vip only); {prefix}countdown <start> <interval>
         """
         start = max(min(start, 10), 3)
+
+        # Twitchio doesn't know how to parse a float
         try:
             interval = float(args[0])
-            interval = max(min(interval, 10), 1)
-        except ValueError:
+            interval = max(min(interval, 10), 0.5)
+        except (ValueError, IndexError):
             interval = 1.0
 
-        for i in range(start, -1, -1):
+        await self.bot.message_queues.queue_command(ctx, f"{start}")
+        for i in range(start-1, -1, -1):
             await asyncio.sleep(interval)
             await self.bot.message_queues.queue_command(ctx, f"{i}")
 

@@ -71,13 +71,9 @@ class SevenTV(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("randomemote", "randemote"))
-    async def re(self, ctx: commands.Context, *args):
+    async def re(self, ctx: commands.Context, count: Optional[int] = 1):
         """Sends random emotes(s) from the channel; {prefix}re <count>"""
-        try: 
-            count = int(args[0])
-            count = min(max(count, 1), 20)
-        except (ValueError, IndexError):
-            count = 1
+        count = min(max(count, 1), 20)
         emotes = await seventv.channel_emotes(ctx.channel_id)
         if len(emotes) == 0:
             await self.bot.message_queues.queue_command(ctx, "Current channel doesn't have any 7tv emotes", reply=True)

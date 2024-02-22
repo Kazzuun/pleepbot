@@ -67,7 +67,7 @@ class Basic(commands.Cog):
         """Picks one of the given choises; {prefix}choose <choise1> <choise1> <choise1>..."""
         if len(args) == 0:
             return
-        await self.bot.message_queues.queue_command(ctx, random.choice(args))
+        await self.bot.message_queues.queue_command(ctx, random.choice(args), reply=True)
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
@@ -76,7 +76,7 @@ class Basic(commands.Cog):
         """Shuffles the given word randomly; {prefix}shuffle <word>"""
         letters = list(word)
         random.shuffle(letters)
-        await self.bot.message_queues.queue_command(ctx, "".join(letters))
+        await self.bot.message_queues.queue_command(ctx, "".join(letters), reply=True)
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)

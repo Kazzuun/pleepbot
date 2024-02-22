@@ -22,6 +22,7 @@ class Util(commands.Cog):
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """Pings the bot showing stats from the machine it's running on"""
+        latency = f"Latency: {(datetime.utcnow() - ctx.message.timestamp).microseconds // 1000}ms"
         p = psutil.Process(os.getpid())
         system = f"System: {platform.uname().system}"
         memory = f"Memory: {p.memory_info().rss // 1024 ** 2}MB"
@@ -32,7 +33,7 @@ class Util(commands.Cog):
             temperature = f"Temperature: {temp[0].current}°C"
         else:
             temperature = f"Temperature: Unknown"
-        await self.bot.message_queues.queue_command(ctx, ", ".join([system, memory, cpu, uptime, temperature]))
+        await self.bot.message_queues.queue_command(ctx, ", ".join([system, memory, cpu, uptime, temperature, latency]))
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)

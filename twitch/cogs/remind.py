@@ -141,10 +141,10 @@ class Remind(commands.Cog):
 
     @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
     @commands.command(aliases=("goodnight",))
-    async def gn(self, ctx: commands.Context, *, message: Optional[str] = None):
+    async def gn(self, ctx: commands.Context):
         """{self.bot.nick} says goodnight to you and queues a goodmorning message to be sent when you type next"""
         await database.set_reminder(
-            ctx.channel.name, ctx.author.name, ctx.author.name, ReminderType.GN, message
+            ctx.channel.name, ctx.author.name, ctx.author.name, ReminderType.GN, None
         )
         emote1 = await seventv.best_fitting_emote(
             await database.channel_id(ctx.channel.name), 
@@ -162,10 +162,10 @@ class Remind(commands.Cog):
 
     @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
     @commands.command()
-    async def afk(self, ctx: commands.Context, *, message: Optional[str] = None):
+    async def afk(self, ctx: commands.Context):
         """You go afk"""
         await database.set_reminder(
-            ctx.channel.name, ctx.author.name, ctx.author.name, ReminderType.AFK, message
+            ctx.channel.name, ctx.author.name, ctx.author.name, ReminderType.AFK, None
         )
         await self.bot.message_queues.queue_command(
             ctx, f"_{ctx.author.name} is now afk"
@@ -173,7 +173,7 @@ class Remind(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
-    @commands.command(aliases=("deleterem", "cancelrem", "canrem"))
+    @commands.command(aliases=("deleterem", "cancelrem", "canrem", "delremind", "canremind"))
     async def delrem(self, ctx: commands.Context, id: int):
         """Deletes a reminder you have set; {prefix}delrem <ID>"""
         if await database.is_admin(ctx.author.id):

@@ -136,7 +136,10 @@ async def emoteset_id(twitch_id: Union[str, int]) -> str:
 
 @memoize_async(ttl=timedelta(hours=3))
 async def channel_emotes(twitch_id: Union[str, int], *, force: bool = False) -> list[dict[str, str]]:
-    response = await _channel_emoteset(twitch_id)
+    try:
+        response = await _channel_emoteset(twitch_id)
+    except SevenTVException:
+        return []
     if response is None:
         return []
     emotes = [
