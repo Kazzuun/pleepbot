@@ -3,6 +3,7 @@ import logging
 import logging.config
 import logging.handlers
 import os
+from typing import Union
 
 
 __all__ = (
@@ -16,8 +17,9 @@ logger = logging.getLogger("twitch")
 
 
 class TaskEventFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
-        return record.module != "base_events"
+    def filter(self, record: logging.LogRecord) -> Union[bool, logging.LogRecord]:
+        filtered_modules = ("base_events", "aiohttp")
+        return not (record.module in filtered_modules)
 
 
 def setup_logging():
