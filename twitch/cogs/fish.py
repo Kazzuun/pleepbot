@@ -11,7 +11,7 @@ from twitchbot import Bot
 
 
 class Fish(commands.Cog):
-    COG_COOLDOWN = 5
+    COG_COOLDOWN = 3
 
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
@@ -21,25 +21,40 @@ class Fish(commands.Cog):
         return int((experience / 50) ** 0.5) + 1
 
 
-    @commands.cooldown(rate=1, per=1*60*60, bucket=commands.Bucket.user)
-    @commands.command(aliases=("fishinge", "fishingtime", "🐟"))
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.user)
+    @commands.command(aliases=("fishing", "fishinge", "fishingtime", "fishh", "🐟", "🎣"))
     async def fish(self, ctx: commands.Context, *args):
         """
         You go fishing; number of fish you catch is based on luck, fishing level, and time since last fished;
         set a reminder to remind you to fish in 1 hour with -r flag
         """
+        cooldown_period = 3600
         current_time = datetime.utcnow()
         last_fished = await database.last_fished(ctx.author.id)
-        seconds_ellapsed = (current_time - last_fished).seconds if last_fished else 1*60*60
+        seconds_ellapsed = (current_time - last_fished).seconds if last_fished else cooldown_period
 
-        hours = 0 if seconds_ellapsed < 3600 else seconds_ellapsed / 3600
+        # Manage cooldown
+        if seconds_ellapsed < cooldown_period:
+            await self.bot.message_queues.queue_command(
+                ctx, 
+                f"You can go fishing again in {cooldown_period-seconds_ellapsed}s", 
+                reply=True
+            )
+            return
+
+        hours = seconds_ellapsed / 3600
 
         exp_before = await database.fishing_exp(ctx.author.id)
         level_before = self.level_from_exp(exp_before)
 
         # Base count of 1-2 fish + random number based on current level + count based on hours since last fished
-        total_fish_count = int(random.randint(1, 2) + (random.random() + 1) / 2 * ((level_before - 1) ** 0.6) + (hours ** 0.4 - 1))
+        total_fish_count = int(
+            random.randint(1, 2) + 
+            (random.random() + 1) / 2 * ((level_before - 1) ** 0.6) + 
+            (hours ** 0.4 - cooldown_period / 3600)
+        )
 
+        # Not reachable but in case of changes
         if total_fish_count < 1:
             await self.bot.message_queues.queue_command(ctx, "You suck at fishing...", reply=True)
             return
