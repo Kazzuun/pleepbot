@@ -47,7 +47,7 @@ class Fish(commands.Cog):
         exp_before = await database.fishing_exp(ctx.author.id)
         level_before = self.level_from_exp(exp_before)
 
-        # Base count of 1-2 fish + random number based on current level + count based on hours since last fished
+        # Base count of 1 or 2 fish + random number based on current level + count based on hours since last fished
         total_fish_count = int(
             random.randint(1, 2) + 
             (random.random() + 1) / 2 * ((level_before - 1) ** 0.6) + 
@@ -59,8 +59,8 @@ class Fish(commands.Cog):
             await self.bot.message_queues.queue_command(ctx, "You suck at fishing...", reply=True)
             return
 
-        channel = await ctx.channel.user()
-        channel_emotes = [emote["name"] for emote in await seventv.channel_emotes(channel.id)]
+        channel_id = await database.channel_id(ctx.channel.name)
+        channel_emotes = [emote["name"] for emote in await seventv.channel_emotes(channel_id)]
         global_emotes = [emote["name"] for emote in await seventv.global_emotes()]
         channel_emotes.extend(global_emotes)
 
@@ -69,14 +69,17 @@ class Fish(commands.Cog):
         emotes_ordered = most_used_emotes.most_common(top_n)
 
         fish_caught = random.choices(
-            # Give the most common the highest index
-            [(emote[0], top_n - i) for i, emote in enumerate(emotes_ordered)],
+            # The most common has the smallest index
+            [(i, emote[0]) for i, emote in enumerate(emotes_ordered)],
             # The most common has the highest weight
-            weights=[1 / (j + 1) for j in range(len(emotes_ordered))], 
+            weights=[1 / j for j in range(1, top_n + 1)], 
             k=total_fish_count
         )
+        # Sort caught fish by its rarity (index), most common first
+        fish_caught.sort()
+
         # The most common has the highest index getting the least exp
-        total_exp_amount = int(sum([60 / index for _, index in fish_caught]))
+        total_exp_amount = int(sum([60 / (top_n - index) for index, _ in fish_caught]))
 
         exp_after = exp_before + total_exp_amount
         level_after = self.level_from_exp(exp_after)
@@ -98,7 +101,7 @@ class Fish(commands.Cog):
             reminder_msg = ""
 
         fish_caught_count = {}
-        for name, _ in fish_caught:
+        for _, name in fish_caught:
             fish_caught_count[name] = fish_caught_count.get(name, 0) + 1
 
         caught = " | ".join([f"{name} - {count}" for name, count in fish_caught_count.items()])
@@ -124,6 +127,19 @@ class Fish(commands.Cog):
             ctx, 
             f"_{target.name} has caught {count} fish, has {exp} exp, and is level {level}"
         )
+
+
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
+    @commands.command(aliases=("topfish", "toplevel"))
+    async def topexp(self, ctx: commands.Context):
+        """Shows the fishing stats of the top 5 people ordered by exp"""
+        top_exp = await database.top_fishing_exp(5)
+        user_info = []
+        for i, top_fisher in enumerate(top_exp):
+            username, exp, fish_count = top_fisher
+            level = self.level_from_exp(exp)
+            user_info.append(f"{i+1}. _{username} - level {level}, {exp} exp, {fish_count} caught")
+        await self.bot.message_queues.queue_command(ctx, " | ".join(user_info))
 
 
 def prepare(bot: commands.Bot):

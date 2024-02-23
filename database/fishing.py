@@ -10,7 +10,8 @@ __all__ = (
     "fish",
     "fish_count",
     "fishing_exp",
-    "last_fished"
+    "last_fished",
+    "top_fishing_exp"
 )
 
 
@@ -76,3 +77,17 @@ async def fishing_exp(twitch_id: Union[str, int]) -> int:
         ) as cursor:
             exp = await cursor.fetchone()
             return exp[0] if exp else 0
+
+
+async def top_fishing_exp(top_n: int) -> list[tuple[str, int, int]]:
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute(
+            """
+            SELECT username, exp, fish_count
+            FROM fish
+            ORDER BY exp DESC
+            LIMIT ?;
+            """,
+            (top_n,)
+        ) as cursor:
+            return list(await cursor.fetchall())
