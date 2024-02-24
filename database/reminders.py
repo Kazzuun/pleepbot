@@ -115,15 +115,18 @@ async def set_reminder(
                 SELECT COUNT(*)
                 FROM reminders 
                 WHERE target = ? AND scheduled_at is NULL AND sent = 0 AND cancelled = 0
-            ) < 15 AND (
+            ) < 15 AND ((
                 SELECT COUNT(*) 
                 FROM reminders 
-                WHERE target = ? AND channel = ? AND (type = '{reminder_type.AFK.value}' OR type = '{reminder_type.GN.value}') AND sent = 0 AND cancelled = 0
-            ) < 1;
+                WHERE target = ? AND channel = ? AND (type = '{ReminderType.AFK.value}' OR type = '{ReminderType.GN.value}') AND sent = 0 AND cancelled = 0
+            ) < 1 OR (
+                ? NOT IN ('{ReminderType.AFK.value}', '{ReminderType.GN.value}')
+            ));
             """,
             (channel, sender, target, reminder_type.value, message, scheduled_at, 
              target, 
-             target, channel)
+             target, channel, 
+             reminder_type.value)
         ) as cursor:
             await db.commit()
             return cursor.lastrowid

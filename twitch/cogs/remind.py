@@ -113,7 +113,7 @@ class Remind(commands.Cog):
             ctx.channel.name, ctx.author.name, target, reminderType, message, reminder_time
         )
 
-        if reminder_id is None:
+        if not reminder_id:
             await self.bot.message_queues.queue_command(
                 ctx,
                 "Failed to set a reminder", 
