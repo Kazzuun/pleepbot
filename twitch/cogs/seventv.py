@@ -59,12 +59,14 @@ class SevenTV(commands.Cog):
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
-    async def topemotes(self, ctx: commands.Context):
+    async def topemotes(self, ctx: commands.Context, *args):
         """Shows top 10 emotes from the past 1000 messages"""
         emotes = await seventv.channel_emotes(ctx.channel_id)
         global_emotes = await seventv.global_emotes()
         emotes.extend(global_emotes)
-        emote_count = await database.emote_counts(ctx.channel.name, [emote["name"] for emote in emotes])
+
+        ignore_bot = not ("all" in args or "-a" in args)
+        emote_count = await database.emote_counts(ctx.channel.name, [emote["name"] for emote in emotes], ignore_bot=ignore_bot)
         top_10 = emote_count.most_common(10)
         await self.bot.message_queues.queue_command(ctx, " | ".join([f"{i + 1}. {emote[0]} - {emote[1]}" for i, emote in enumerate(top_10)]))
 

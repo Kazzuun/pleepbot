@@ -64,7 +64,7 @@ class Fish(commands.Cog):
         global_emotes = [emote["name"] for emote in await seventv.global_emotes()]
         channel_emotes.extend(global_emotes)
 
-        most_used_emotes = await database.emote_counts(ctx.channel.name, channel_emotes)
+        most_used_emotes = await database.emote_counts(ctx.channel.name, channel_emotes, ignore_bot=True)
         top_n = 10
         emotes_ordered = most_used_emotes.most_common(top_n)
 

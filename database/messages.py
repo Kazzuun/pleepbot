@@ -50,15 +50,16 @@ async def bot_last_message(channel: str) -> str:
             return message[0]
 
 
-async def emote_count(channel: str, emote: str) -> int:
+async def emote_count(channel: str, emote: str, *, ignore_bot = False) -> int:
     async with aiosqlite.connect(db_path) as db:
         async with db.execute(
-            """
+            f"""
             SELECT message 
             FROM messages 
-            WHERE channel = ? AND message LIKE ?;
+            WHERE channel = ? AND message LIKE ?
+                {"AND sender != ?" if ignore_bot else ""};
             """,
-            (channel, f"%{emote}%"),
+            (channel, f"%{emote}%", os.environ["BOT_NICK"]) if ignore_bot else (channel, f"%{emote}%"),
         ) as cursor:
             count = 0
             for message in await cursor.fetchall():
@@ -66,17 +67,18 @@ async def emote_count(channel: str, emote: str) -> int:
             return count
 
 
-async def emote_counts(channel: str, emotes: list[str], *, nof_messages_counted = 1000) -> Counter[str]:
+async def emote_counts(channel: str, emotes: list[str], *, nof_messages_counted = 1000, ignore_bot: bool = False) -> Counter[str]:
     async with aiosqlite.connect(db_path) as db:
         async with db.execute(
             f"""
             SELECT message
             FROM messages
             WHERE channel = ?
+                {"AND sender != ?" if ignore_bot else ""}
             ORDER BY id DESC
-            LIMIT {nof_messages_counted};
+            LIMIT ?;
             """,
-            (channel,),
+            (channel, os.environ["BOT_NICK"], nof_messages_counted) if ignore_bot else (channel, nof_messages_counted)
         ) as cursor:
             messages = await cursor.fetchall()
             emote_counts = Counter()
