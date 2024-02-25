@@ -51,8 +51,8 @@ class Remind(commands.Cog):
                 message = " ".join(args[:in_position])
                 time_args = [arg for arg in args[(in_position + 1) :] if arg != "and"]
                 parsed_time_args = re.findall(
-                    r"\d*\.\d+|\d+|\D+",
-                    "".join([char for char in "".join(time_args) if char != ","]),
+                    r"-?\d*\.\d+|-?\d+|[a-zA-Z]+",
+                    "".join(time_args)
                 )
 
                 arg_length = len(parsed_time_args)
@@ -67,7 +67,7 @@ class Remind(commands.Cog):
 
                 for i in range(0, arg_length, 2):
                     multiplier = float(parsed_time_args[i])
-                    unit = parsed_time_args[i + 1]
+                    unit = parsed_time_args[i + 1].lower()
                     if unit in ("s", "sec", "secs", "second", "seconds"):
                         seconds += multiplier
                     elif unit in ("m", "min", "mins", "minute", "minutes"):
