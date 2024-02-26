@@ -120,7 +120,7 @@ class SevenTV(commands.Cog):
         {prefix}add <emote name or id> <optional alias> <search filters>
         """
         alias = None
-        if len(args) > 0:
+        if len(args) > 0 and not args[0].startswith("-"):
             alias = args[0]
 
         if seventv.is_valid_emoteid(emote):
@@ -184,7 +184,7 @@ class SevenTV(commands.Cog):
         {prefix}yoink <channel> <emote> <optional alias> <filters>
         """
         alias = None
-        if len(args) > 0:
+        if len(args) > 0 and not args[0].startswith("-"):
             alias = args[0]
 
         channel_emotes = await seventv.channel_emotes(target_channel.id, force=True)
@@ -207,7 +207,10 @@ class SevenTV(commands.Cog):
         elif len(emotes) > 1:
             raise SevenTVException(f"More than one emote match given query: {', '.join([emote['name'] for emote in emotes])}")
         emote = emotes[0]
-        alias = alias if alias else emote_name
+
+        # If alias has not been specified, use the alias it has on the target channel
+        if alias is None:
+            alias = emote["name"]
 
         added_emote = await seventv.add_emote(ctx.channel_id, emote['id'], alias)
         await self.bot.message_queues.queue_command(ctx, f"Added emote {added_emote}")
