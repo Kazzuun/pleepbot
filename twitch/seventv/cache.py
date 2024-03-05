@@ -20,11 +20,15 @@ def memoize_async(*, ttl: Optional[timedelta] = None):
                 if (ttl and datetime.utcnow() > expiration_time) or kwargs.get("force"):
                     del cache[args]
                 else:
+                    if isinstance(result, list):
+                        return result.copy()
                     return result
 
             result = await func(*args, **kwargs)
             expiration_time = datetime.utcnow() + ttl if ttl else None
             cache[args] = (result, expiration_time)
+            if isinstance(result, list):
+                return result.copy()
             return result
 
         return wrapper

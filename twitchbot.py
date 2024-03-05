@@ -9,7 +9,7 @@ import twitchio
 from twitchio.ext import commands, routines
 
 import database
-from twitch.message_queues import MessageQueues
+from twitch import MessageQueues
 from twitch.exceptions import SevenTVException, Filtered
 from twitch import logging
 from twitch.logging import logger
@@ -77,7 +77,7 @@ class Bot(commands.Bot):
         # Disallow banned users to use the bot
         if await database.is_banned(message.author.id):
             if message.content.startswith(self.prefixes):
-                logger.info("Banned user %s (%s) tried to use a command '%s' in #%s", sender, str(message.author.id), message.content, channel)
+                logger.info("[#%s] Banned user %s (%s) tried to use a command '%s'", channel, sender, str(message.author.id), message.content)
             return
 
         # Get notifications before command
@@ -125,26 +125,21 @@ class Bot(commands.Bot):
         ignored_exceptions = (
             commands.CheckFailure, 
             commands.BadArgument, 
-            commands.ArgumentParsingFailed
+            commands.ArgumentParsingFailed,
+            commands.CommandOnCooldown,
+            commands.CommandNotFound
         )
         if any([isinstance(error, err) for err in ignored_exceptions]):
             pass
 
         elif isinstance(error, SevenTVException):
-            await self.message_queues.queue_command(ctx, error.message)
+            await self.message_queues.queue_command(ctx, error.message, reply=True)
 
         elif isinstance(error, commands.MissingRequiredArgument):
-            await self.message_queues.queue_command(ctx, "You're missing an argument: " + error.name, reply=True)
-
-        elif isinstance(error, commands.CommandOnCooldown):
-            if ctx.command.name in ("fortune",):
-                await self.message_queues.queue_command(ctx, error.args[0], reply=True)
+            await self.message_queues.queue_command(ctx, f"You're missing an argument: <{error.name}>", reply=True)
 
         elif isinstance(error, Filtered):
-            await self.message_queues.queue_command(ctx, "Message got blocked", reply=True)
-
-        elif isinstance(error, commands.CommandNotFound):
-            return
+            await self.message_queues.queue_command(ctx, "<Message blocked>", reply=True)
 
         else:
             traceback.print_exception(type(error), error, error.__traceback__)
@@ -154,7 +149,8 @@ class Bot(commands.Bot):
             )
             return
 
-        logger.warning("[#%s] %s's command <%s> failed: %s", ctx.channel.name, ctx.author.name, ctx.command.name, error)
+        command = ctx.command.name if ctx.command else "unknown command"
+        logger.warning("[#%s] %s's command <%s> failed: %s", ctx.channel.name, ctx.author.name, command, error)
 
 
     async def global_check(self, ctx: commands.Context) -> bool:
@@ -199,8 +195,16 @@ class Bot(commands.Bot):
 
 
     async def global_after_invoke(self, ctx: commands.Context) -> None:
-        time_ellapsed: timedelta = datetime.utcnow() - ctx.exec_time
-        logger.debug(f"[#%s] %s executed command <%s>. Time taken: %s", ctx.channel.name, ctx.author.name, ctx.command.name, f"{time_ellapsed.microseconds/1000:.2f}ms")
+        exec_time_ellapsed = (datetime.utcnow() - ctx.exec_time).total_seconds() * 1000
+        total_time_ellapsed = (datetime.utcnow() - ctx.message.timestamp).total_seconds() * 1000
+        logger.debug(
+            f"[#%s] %s executed command <%s>. Time taken: %s (%s)", 
+            ctx.channel.name, 
+            ctx.author.name, 
+            ctx.command.name, 
+            f"{exec_time_ellapsed:.2f}ms",
+            f"{total_time_ellapsed:.2f}ms"
+        )
 
 
 if __name__ == "__main__":

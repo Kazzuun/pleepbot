@@ -110,7 +110,11 @@ class MessageQueues:
 
 
     async def queue_message(self, channel: str, message: str) -> None:
-        await self._add_to_queue(channel, Message(self.bot, channel, message))
+        try:
+            await self._add_to_queue(channel, Message(self.bot, channel, message))
+        except Filtered as fil:
+            await self._add_to_queue(channel, Message(self.bot, channel, "<Message blocked>"))
+            logger.warning("Normal message filtered: %s", fil.message)
 
 
     async def queue_reminder(self, reminder: database.Reminder) -> None:
@@ -120,8 +124,8 @@ class MessageQueues:
         except KeyError:
             await database.cancel_reminder(reminder.id)
             logger.warning("Reminder not sent: %s", str(reminder))
-        except Filtered:
-            logger.warning("Reminder message filtered: %s", str(reminder))
+        except Filtered as fil:
+            logger.warning("Reminder message filtered: %s %s", fil.message, str(reminder))
             reminder.message = "<Message blocked>"
             await self._add_to_queue(reminder.channel, Message(self.bot, reminder.channel, await reminder.formatted_message()))
             await database.set_reminder_as_sent(reminder.id)

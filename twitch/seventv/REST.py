@@ -120,7 +120,7 @@ async def seventv_user_id(twitch_id: Union[str, int]) -> str:
     """
     response = await _channel_info(twitch_id)
     if response is None:
-        raise SevenTVException("Channel does not have twitch linked with a 7tv account")
+        raise SevenTVException("Current channel does not have twitch linked with a 7tv account")
     userid = response["user"]["id"]
     return userid
 
@@ -129,7 +129,7 @@ async def seventv_user_id(twitch_id: Union[str, int]) -> str:
 async def emoteset_id(twitch_id: Union[str, int]) -> str:
     response = await _channel_info(twitch_id)
     if response is None:
-        raise SevenTVException("Channel does not have an emoteset")
+        raise SevenTVException("Current channel does not have an emoteset")
     emoteset_id = response["emote_set"]["id"]
     return emoteset_id
 

@@ -114,11 +114,18 @@ async def set_reminder(
             WHERE (
                 SELECT COUNT(*)
                 FROM reminders 
-                WHERE target = ? AND scheduled_at is NULL AND sent = 0 AND cancelled = 0
+                WHERE target = ? 
+                    AND scheduled_at is NULL 
+                    AND sent = 0 
+                    AND cancelled = 0
             ) < 15 AND ((
                 SELECT COUNT(*) 
                 FROM reminders 
-                WHERE target = ? AND channel = ? AND (type = '{ReminderType.AFK.value}' OR type = '{ReminderType.GN.value}') AND sent = 0 AND cancelled = 0
+                WHERE target = ? 
+                    AND channel = ? 
+                    AND (type = '{ReminderType.AFK.value}' OR type = '{ReminderType.GN.value}') 
+                    AND sent = 0 
+                    AND cancelled = 0
             ) < 1 OR (
                 ? NOT IN ('{ReminderType.AFK.value}', '{ReminderType.GN.value}')
             ));
@@ -256,9 +263,18 @@ async def continue_afk(sender: str, channel: str) -> bool:
                     AND (type = '{ReminderType.AFK.value}' OR type = '{ReminderType.GN.value}')
                 ORDER BY processed_at DESC
                 LIMIT 1
-            );
+            ) AND (
+                SELECT COUNT(*) 
+                FROM reminders 
+                WHERE target = ? 
+                    AND channel = ? 
+                    AND (type = '{ReminderType.AFK.value}' OR type = '{ReminderType.GN.value}') 
+                    AND sent = 0 
+                    AND cancelled = 0
+            ) < 1;
             """,
-            (sender, channel),
+            (sender, channel,
+             sender, channel),
         ) as cursor:
             await db.commit()
             return cursor.rowcount > 0

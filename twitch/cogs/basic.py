@@ -36,7 +36,7 @@ class Basic(commands.Cog):
         await self.bot.message_queues.queue_command(ctx, f"{len(ctx.chatters)} lurkers {emote}")
 
 
-    @commands.cooldown(rate=1, per=3*60*60, bucket=commands.Bucket.user)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.user)
     @commands.command(aliases=("cookie", "🍪", "🥠"))
     async def fortune(self, ctx: commands.Context):
         """Tells a random fortune"""

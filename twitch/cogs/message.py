@@ -72,8 +72,7 @@ class Message(commands.Cog):
             return
         
         sender, message, sentAt = result
-        filter_info = "" if nof_filters == 0 else f"({nof_filters} filter(s))"
-        await self.bot.message_queues.queue_command(ctx, f"({sentAt.strftime('%d/%m/%Y, %H:%M:%S')}) {filter_info} _{sender}: {message}")
+        await self.bot.message_queues.queue_command(ctx, f"({sentAt.strftime('%d/%m/%Y, %H:%M:%S')}) _{sender}: {message}")
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
@@ -130,11 +129,11 @@ class Message(commands.Cog):
             await self.bot.message_queues.queue_command(ctx, f"User hasn't sent any messages matching the {nof_filters} filter(s)", reply=True)
             return
 
-        filter_info = "" if nof_filters == 0 else f" ({nof_filters} filter(s))"
+        filter_info = "" if nof_filters == 0 else f" matching {nof_filters} filter(s)"
         if target is None:
             await self.bot.message_queues.queue_command(ctx, f"Total messages sent{filter_info}: {count}")
         else:
-            await self.bot.message_queues.queue_command(ctx, f"Messages sent by _{target}{filter_info}: {count}")
+            await self.bot.message_queues.queue_command(ctx, f"Messages sent{filter_info} by _{target}: {count}")
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)

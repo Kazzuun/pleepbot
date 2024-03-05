@@ -180,14 +180,15 @@ class SevenTV(commands.Cog):
         the name of the emote must be an exact match but it can be searched with filters:
         -c for case insensitive, -i for the given word to be included in an emote name,
         -s for the emote to start with the given word, matching more than one emote 
-        gives all the emotes it matched without adding any;
+        gives all the emotes it matched without adding any; use -f to force a cache update;
         {prefix}yoink <channel> <emote> <optional alias> <filters>
         """
         alias = None
         if len(args) > 0 and not args[0].startswith("-"):
             alias = args[0]
 
-        channel_emotes = await seventv.channel_emotes(target_channel.id, force=True)
+        force = "-f" in args
+        channel_emotes = await seventv.channel_emotes(target_channel.id, force=force)
 
         def emotes_match(emote: str, emote_query: str) -> bool:
             if "-c" in args:
@@ -205,7 +206,7 @@ class SevenTV(commands.Cog):
         if len(emotes) == 0:
             raise SevenTVException("No emote with given query found")
         elif len(emotes) > 1:
-            raise SevenTVException(f"More than one emote match given query: {', '.join([emote['name'] for emote in emotes])}")
+            raise SevenTVException(f"More than one emote match given query: {' '.join([emote['name'] for emote in emotes])}")
         emote = emotes[0]
 
         # If alias has not been specified, use the alias it has on the target channel
