@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 from typing import Optional
 
@@ -87,6 +88,20 @@ class SevenTV(commands.Cog):
         max_emotes = 6
         links = [f"{emote_info['name']} - 7tv.app/emotes/{emote_info['id']}" for emote_info in emotes][:max_emotes]
         await self.bot.message_queues.queue_command(ctx, " | ".join(links))
+
+
+    @commands.cooldown(rate=1, per=5, bucket=commands.Bucket.member)
+    @commands.command()
+    async def added(self, ctx: commands.Context, emote: str):
+        """Shows who and when added the specified emote; {prefix}added <emote>"""
+        channel_id = await database.channel_id(ctx.channel.name)
+        actor, added_at = await seventv.emote_added_by(channel_id, emote)
+        actor = f"_{actor}" if actor else "<unknown>"
+
+        time_ellapsed = datetime.utcnow() - added_at
+        hours = time_ellapsed.seconds // 3600
+        days = time_ellapsed.days
+        await self.bot.message_queues.queue_command(ctx, f"{emote} was added by {actor} on {added_at.strftime('%d/%m/%Y')} ({days}d, {hours}h ago)")
 
 
 def prepare(bot: commands.Bot):

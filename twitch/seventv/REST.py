@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import random
 import re
 from typing import Callable, Optional, Union
@@ -15,6 +15,7 @@ __all__ = (
     "seventv_user_id",
     "emoteset_id",
     "channel_emotes",
+    "emote_added_by",
     "is_valid_emoteid",
     "best_fitting_emote",
 )
@@ -25,7 +26,7 @@ TIMEOUT = aiohttp.ClientTimeout(total=7)
 
 # TODO: Document your code: https://numpydoc.readthedocs.io/en/latest/format.html
 
-@memoize_async()
+@memoize_async(ttl=timedelta(days=7))
 async def global_emotes() -> list[dict[str, str]]:
     async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
         url = f"{ENDPOINT}/emote-sets/global"
@@ -59,7 +60,7 @@ async def _channel_info(twitch_id: Union[str, int]) -> Optional[dict]:
             raise SevenTVException("Failed to fetch 7tv info (request timed out)")
 
 
-async def _channel_emoteset(twitch_id: Union[str, int]) -> Optional[dict]:
+async def _channel_emoteset(twitch_id: Union[str, int]) -> dict:
     """
     Fetches emotes directly from the emoteset. This info updates more 
     frequently than info gotten from /users/twitch/{twitch_id} route.
@@ -72,15 +73,33 @@ async def _channel_emoteset(twitch_id: Union[str, int]) -> Optional[dict]:
                 if resp.status == 200:
                     response = await resp.json()
                     return response
-                elif resp.status == 404:
-                    return None
                 else:
                     raise SevenTVException(f"Something went wrong with fetching from api (status {resp.status})")
         except TimeoutError:
             raise SevenTVException("Failed to fetch 7tv emotes (request timed out)")
 
 
-@memoize_async()
+async def _user_from_id(seventv_user_id: str) -> Optional[dict]:
+    """
+    Fetches emotes directly from the emoteset. This info updates more 
+    frequently than info gotten from /users/twitch/{twitch_id} route.
+    """
+    async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
+        url = f"{ENDPOINT}/users/{seventv_user_id}"
+        try:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    response = await resp.json()
+                    return response
+                elif resp.status == 404:
+                    return
+                else:
+                    raise SevenTVException(f"Something went wrong with fetching from api (status {resp.status})")
+        except TimeoutError:
+            raise SevenTVException("Failed to fetch 7tv user (request timed out)")
+
+
+@memoize_async(ttl=timedelta(days=7))
 async def emote_from_id(emote_id: str) -> dict:
     """
     """
@@ -126,18 +145,18 @@ async def seventv_user_id(twitch_id: Union[str, int]) -> str:
 
 
 @memoize_async()
-async def emoteset_id(twitch_id: Union[str, int]) -> str:
-    response = await _channel_info(twitch_id)
+async def emoteset_id(channel_id: Union[str, int]) -> str:
+    response = await _channel_info(channel_id)
     if response is None:
         raise SevenTVException("Current channel does not have an emoteset")
     emoteset_id = response["emote_set"]["id"]
     return emoteset_id
 
 
-@memoize_async(ttl=timedelta(hours=3))
-async def channel_emotes(twitch_id: Union[str, int], *, force: bool = False) -> list[dict[str, str]]:
+@memoize_async(ttl=timedelta(hours=4))
+async def channel_emotes(channel_id: Union[str, int], *, force: bool = False) -> list[dict[str, str]]:
     try:
-        response = await _channel_emoteset(twitch_id)
+        response = await _channel_emoteset(channel_id)
     except SevenTVException:
         return []
     if response is None:
@@ -147,6 +166,24 @@ async def channel_emotes(twitch_id: Union[str, int], *, force: bool = False) -> 
         for emote in response["emotes"]
     ]
     return emotes
+
+
+@memoize_async(ttl=timedelta(hours=1))
+async def emote_added_by(channel_id: Union[str, int], target_emote: str) -> tuple[Optional[str], datetime]:
+    emoteset = await _channel_emoteset(channel_id)
+    emote_in_set = [emote for emote in emoteset["emotes"] if emote["name"] == target_emote]
+    if len(emote_in_set) == 0:
+        raise SevenTVException("Emote not found")
+    emote_in_set = emote_in_set[0]
+    actor_id = emote_in_set["actor_id"]
+    if actor_id:
+        actor = await _user_from_id(actor_id)
+        actor_name = actor["username"]
+    else:
+        actor_name = None
+    timestamp = int(emote_in_set["timestamp"])
+    added_at = datetime.utcfromtimestamp(timestamp/1000)
+    return (actor_name, added_at)
 
 
 def is_valid_emoteid(emote_id: str) -> bool:
@@ -161,10 +198,15 @@ def is_valid_emoteid(emote_id: str) -> bool:
 
 
 async def best_fitting_emote(
-    twitch_id: Union[str, int], filter_func: Callable[[str], bool], *, default: str = ""
+    channel_id: Union[str, int], 
+    filter_func: Callable[[str], bool], 
+    *, 
+    default: str = "", 
+    include_global: bool = False
 ) -> str:
-    emotes = [emote["name"] for emote in await channel_emotes(twitch_id)]
-    filtered_emotes = list(filter(filter_func, emotes))
+    emotes = await channel_emotes(channel_id) + (await global_emotes() if include_global else [])
+    emotes_names = [emote["name"] for emote in emotes]
+    filtered_emotes = list(filter(filter_func, emotes_names))
     if len(filtered_emotes) == 0:
         return default
     return random.choice(filtered_emotes)
