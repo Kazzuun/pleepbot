@@ -9,18 +9,15 @@ import twitchio
 from twitchio.ext import commands, routines
 
 import database
-from twitch import MessageQueues
+from twitch import MessageQueues, EmotePatterns
 from twitch.exceptions import SevenTVException, Filtered
-from twitch import logging
-from twitch.logging import logger
+from twitch.logging import logger, setup_logging
 
 
 class Bot(commands.Bot):
     def __init__(self) -> None:
-        # Setup logging
-        logging.setup_logging()
-
-        # Initialize database tables
+        # Initialize bot
+        setup_logging()
         database.initialize_tables()
 
         self.prefixes = tuple(os.environ["BOT_PREFIXES"].split())
@@ -33,10 +30,11 @@ class Bot(commands.Bot):
             prefix=self.prefixes,
             initial_channels=self.initial_channels,
         )
-        # Initialize the message queues
-        self.message_queues = MessageQueues(self, self.initial_channels)
 
-        # Add the global check
+        self.message_queues = MessageQueues(self, self.initial_channels)
+        self.emote_patterns = EmotePatterns()
+
+        # Add the global check for optouts
         self.check(self.global_check)
 
         # Load cogs
@@ -80,6 +78,11 @@ class Bot(commands.Bot):
                 logger.info("[#%s] Banned user %s (%s) tried to use a command '%s'", channel, sender, str(message.author.id), message.content)
             return
 
+        # Handle advancing the emote patterns and sending the possible message
+        emote_pattern_message = await self.emote_patterns.pattern_message(channel, sender, message.content)
+        if emote_pattern_message is not None:
+            await self.message_queues.queue_message(channel, emote_pattern_message)
+
         # Get notifications before command
         notifications_before = await database.sendable_notifications(channel, sender)
 
@@ -100,7 +103,7 @@ class Bot(commands.Bot):
 
         # Randomly send pleep whenever someone mentions it
         if (random.random() < 0.15 and 
-            not message.content.startswith(self.prefixes) and 
+            not message.content.startswith(self.prefixes + ("@",)) and 
             self.message_queues._queues[channel].qsize() == 0 and 
             "pleep" in message.content
         ):
