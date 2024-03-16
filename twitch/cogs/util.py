@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, UTC
 import os
 import platform
 import re
 from typing import Optional
 
 import psutil
+import twitchio
 from twitchio.ext import commands
 
 import database
@@ -37,21 +38,54 @@ class Util(commands.Cog):
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
+    @commands.command(aliases=("title",))
+    async def stream(self, ctx: commands.Context, channel: Optional[twitchio.User]):
+        """
+        Shows the channel's stream info; defaults to current channel but a channel can be 
+        specified: {prefix}stream <channel>
+        """
+        channel_name = ctx.channel.name if channel is None else channel.name
+        channel_id = await database.channel_id(channel_name) if channel is None else channel.id
+        channel_info = await self.bot.fetch_channel(channel_name)
+        offline_info = f"Title: {channel_info.title} — Game: {channel_info.game_name}"
+        stream = await self.bot.fetch_streams(user_logins=[channel_name])
+        if len(stream) == 0:
+            last_vods = await self.bot.fetch_videos(user_id=channel_id, sort="time", type="archive")
+            if len(last_vods) > 0:
+                time_offline = f"({str(datetime.now(UTC) - last_vods[0].created_at).split('.')[0]})"
+            else:
+                time_offline = ""
+            stream_info = f"OFFLINE {time_offline}"
+        else:
+            stream = stream[0]
+            time_live = datetime.now(UTC) - stream.started_at
+            m, s = divmod(int(time_live.total_seconds()), 60)
+            h, m = divmod(m, 60)
+            if h > 0:
+                time_formatted = f"{h}h {m}m {s}s"
+            else:
+                time_formatted = f"{m}m {s}s"
+            stream_info = f"Viewer count: {stream.viewer_count} — Live: {time_formatted}"
+        await self.bot.message_queues.queue_command(ctx, f"{offline_info} — {stream_info}")
+
+
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def silent(self, ctx: commands.Context, switch: Optional[str]):
         """Silences pings from commands; can be toggled back on with {prefix}silent off"""
         if switch in ("off", "disable"):
             success = await database.enable_pings(ctx.author.id)
             if success:
-                await self.bot.message_queues.queue_command(ctx, "Pings are no longer silent", reply=True)
+                message = "Pings are no longer silent"
             else:
-                await self.bot.message_queues.queue_command(ctx, "Your pings are already enabled", reply=True)
+                message = "Your pings are already enabled"
         else:
             success = await database.mute_pings(ctx.author.id, ctx.author.name)
             if success:
-                await self.bot.message_queues.queue_command(ctx, "Pings are now silent", reply=True)
+                message = "Pings are now silent"
             else:
-                await self.bot.message_queues.queue_command(ctx, "Your pings are already silent", reply=True)
+                message = "Your pings are already silent"
+        await self.bot.message_queues.queue_command(ctx, message, reply=True)
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
