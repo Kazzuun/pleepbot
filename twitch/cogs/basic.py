@@ -86,8 +86,8 @@ class Basic(commands.Cog):
         A random number from a normal distribution with standard deviation of 15 
         and mean of 100; can be used with a target: {prefix}iq <target>
         """
-        target = target.name if target else ctx.author.name
-        await self.bot.message_queues.queue_command(ctx, f"_{target}'s IQ is {round(numpy.random.normal(100, 15))}")
+        target = target.name if target else f"_{ctx.author.name}"
+        await self.bot.message_queues.queue_command(ctx, f"{target} 's IQ is {round(numpy.random.normal(100, 15))}", targets=(target,))
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
@@ -95,14 +95,18 @@ class Basic(commands.Cog):
     async def slap(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
         """Slaps the given target: {prefix}slap <target>"""
         target = ctx.author.name if target is None or target.name == self.bot.nick else target.name
-        await self.bot.message_queues.queue_command(ctx, f"/me slaps {target} around with a large trout", targets=(target,))
+        slap_emote = await seventv.best_fitting_emote(
+            await database.channel_id(ctx.channel.name),
+            lambda emote: "punch" in emote.lower() or "slap" in emote.lower()
+        )
+        await self.bot.message_queues.queue_command(ctx, f"/me slaps {target} around with a large trout {slap_emote}", targets=(target,))
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
-    @commands.command()
+    @commands.command(aliases=("tuckk",))
     async def tuck(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter], emote: Optional[str]):
         """Tucks the target to bed; {prefix}tuck <target> <optional emote>"""
-        target = target.name if target else "themselves"
+        target = "themselves" if target is None or target.name.lower() == ctx.author.name else target.name.lower()
         channel_id = await database.channel_id(ctx.channel.name)
         emotes = await seventv.channel_emotes(channel_id)
         if emote is None or emote not in [channel_emote["name"] for channel_emote in emotes]:
@@ -114,8 +118,7 @@ class Basic(commands.Cog):
     @commands.command()
     async def hug(self, ctx: commands.Context, target: Optional[twitchio.PartialChatter]):
         """Hugs the target; {prefix}hug <target>"""
-        target = target.name if target else "themselves"
-
+        target = "themselves" if target is None or target.name.lower() == ctx.author.name else target.name.lower()
         emote = await seventv.best_fitting_emote(
             await database.channel_id(ctx.channel.name),
             lambda emote: "Hug" in emote or "HUG" in emote or "hugg" in emote
@@ -161,6 +164,48 @@ class Basic(commands.Cog):
         else:
             message = f"_{username} rolled {', '.join(map(str, rolled))} | total: {sum(rolled)}"
         await self.bot.message_queues.queue_command(ctx, message)
+
+
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
+    @commands.command()
+    async def rps(self, ctx: commands.Context, move: str):
+        """Play rock paper scissors against the bot; {prefix}rps <move>"""
+        channel_id = await database.channel_id(ctx.channel.name)
+
+        move = move.lower()
+        if move.startswith("r"):
+            move = "rock"
+        elif move.startswith("p"):
+            move = "paper"
+        elif move.startswith("s"):
+            move = "scissors"
+        else:
+            return
+
+        bot_move = random.choice(("rock", "paper", "scissors"))
+        if move == bot_move:
+            emote = await seventv.best_fitting_emote(
+                channel_id,
+                lambda emote: ("dank" in emote.lower() and not "DANK" in emote) or emote.lower() in ("erm", "urm"),
+                default="FeelsDankMan",
+                include_global=True
+            )
+            outcome = "tie"
+        elif (move == "rock" and bot_move == "scissors") or (move == "paper" and bot_move == "rock") or (move == "scissors" and bot_move == "paper"):
+            emote = await seventv.best_fitting_emote(
+                channel_id,
+                lambda emote: "sad" in emote.lower() or "cry" in emote.lower(),
+                default="peepoSad"
+            )
+            outcome = "you won"
+        else:
+            emote = await seventv.best_fitting_emote(
+                channel_id,
+                lambda emote: "happy" in emote.lower() or emote in (":DD", "YAAAY"),
+                default="peepoHappy"
+            )
+            outcome = "I won"
+        await self.bot.message_queues.queue_command(ctx, f"{bot_move.title()} - {outcome} {emote}", reply=True)
 
 
     @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
