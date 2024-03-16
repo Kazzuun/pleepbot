@@ -65,5 +65,6 @@ CREATE TABLE IF NOT EXISTS fish(
     fish_count  INTEGER NOT NULL DEFAULT 0,
     exp         INTEGER NOT NULL DEFAULT 0,
     last_fished TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    equipment   INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (twitch_id)
 );
