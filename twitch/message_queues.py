@@ -51,6 +51,9 @@ class MessageQueues:
 
 
     async def _add_to_queue(self, channel: str, message: ISendableMessage) -> None:
+        # Clean extra white space
+        message.message = message.message.strip()
+
         # Make sure the message is of valid length
         # Twitch allows messages upto 500 characters long
         if len(message.message) == 0:

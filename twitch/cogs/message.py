@@ -65,7 +65,7 @@ class Message(commands.Cog):
         nof_filters = len([fil for fil in (lt, gt, included, excluded) if fil is not None])
         result = await database.random_message(ctx.channel.name, target, lt=lt, gt=gt, included=included, excluded=excluded)
         if result is None and nof_filters == 0:
-            await self.bot.message_queues.queue_command(ctx, "User hasn't sent any message in this channel", reply=True)
+            await self.bot.message_queues.queue_command(ctx, "User hasn't sent any messages in this channel", reply=True)
             return
         elif result is None:
             await self.bot.message_queues.queue_command(ctx, "No message found with given filters", reply=True)
@@ -123,7 +123,7 @@ class Message(commands.Cog):
         nof_filters = len([fil for fil in (lt, gt, included, excluded) if fil is not None])
         count = await database.nofmessages(ctx.channel.name, target, lt=lt, gt=gt, included=included, excluded=excluded)
         if count == 0 and nof_filters == 0:
-            await self.bot.message_queues.queue_command(ctx, "User hasn't sent any message in this channel", reply=True)
+            await self.bot.message_queues.queue_command(ctx, "User hasn't sent any messages in this channel", reply=True)
             return
         elif count == 0:
             await self.bot.message_queues.queue_command(ctx, f"User hasn't sent any messages matching the {nof_filters} filter(s)", reply=True)

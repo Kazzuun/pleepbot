@@ -139,7 +139,7 @@ class Remind(commands.Cog):
             )
 
 
-    @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("goodnight",))
     async def gn(self, ctx: commands.Context):
         """{self.bot.nick} says goodnight to you and queues a goodmorning message to be sent when you type next"""
@@ -160,7 +160,7 @@ class Remind(commands.Cog):
         )
 
 
-    @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command()
     async def afk(self, ctx: commands.Context):
         """You go afk"""
@@ -196,7 +196,7 @@ class Remind(commands.Cog):
             )
 
 
-    @commands.cooldown(rate=1, per=60, bucket=commands.Bucket.member)
+    @commands.cooldown(rate=1, per=COG_COOLDOWN, bucket=commands.Bucket.member)
     @commands.command(aliases=("cafk",))
     async def rafk(self, ctx: commands.Context):
         """Resumes your afk status"""

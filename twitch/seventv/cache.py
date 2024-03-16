@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import random
 from typing import Awaitable, Callable, Optional
 
 
@@ -25,7 +26,7 @@ def memoize_async(*, ttl: Optional[timedelta] = None):
                     return result
 
             result = await func(*args, **kwargs)
-            expiration_time = datetime.utcnow() + ttl if ttl else None
+            expiration_time = datetime.utcnow() + ttl + timedelta(seconds=random.randint(-ttl.total_seconds() // 6, ttl.total_seconds() // 6)) if ttl else None
             cache[args] = (result, expiration_time)
             if isinstance(result, list):
                 return result.copy()

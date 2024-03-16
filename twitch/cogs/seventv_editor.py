@@ -19,7 +19,7 @@ class SevenTVEditor(commands.Cog):
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         channel_id = await database.channel_id(ctx.channel.name)
-        editors = await seventv.get_editors(ctx.channel_id)
+        editors = await seventv.get_editors(channel_id)
 
         bot_seventv_login = os.environ['SEVEN_TV_USERNAME']
         bot_is_editor = bot_seventv_login in editors or bot_seventv_login == ctx.channel.name
@@ -63,7 +63,6 @@ class SevenTVEditor(commands.Cog):
             )
             emote_id = emotes[0]['id']
 
-
         channel_id = await database.channel_id(ctx.channel.name)
         added_emote = await seventv.add_emote(channel_id, emote_id, alias)
         await self.bot.message_queues.queue_command(ctx, f"Added emote {added_emote}")
@@ -73,13 +72,13 @@ class SevenTVEditor(commands.Cog):
     @commands.command()
     async def remove(self, ctx: commands.Context, emote_name: str):
         """Removes given emote from the channel; {prefix}remove <emote>"""
-        emotes = await seventv.channel_emotes(ctx.channel_id, force=True)
+        channel_id = await database.channel_id(ctx.channel.name)
+        emotes = await seventv.channel_emotes(channel_id, force=True)
         target_emote = [emote for emote in emotes if emote['name'] == emote_name]
         if len(target_emote) == 0:
             raise SevenTVException("No emote with given name found (you may need to wait a bit for 7tv's cache to update)")
         emote_id = target_emote[0]['id']
 
-        channel_id = await database.channel_id(ctx.channel.name)
         await seventv.remove_emote(channel_id, emote_id)
         await self.bot.message_queues.queue_command(ctx, f"Removed emote {emote_name}")
 

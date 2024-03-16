@@ -34,7 +34,6 @@ TIMEOUT = 7
 
 transport = AIOHTTPTransport(url=ENDPOINT, timeout=TIMEOUT)
 
-@memoize_async(ttl=timedelta(hours=6))
 async def _get_editors(seventv_id: str) -> list[str]:
     async with Client(transport=transport) as session:
         query = gql(
@@ -68,6 +67,7 @@ async def _get_editors(seventv_id: str) -> list[str]:
         return editors
 
 
+@memoize_async(ttl=timedelta(hours=6))
 async def get_editors(twitch_id: int) -> list[str]:
     seventv_id = await seventv_user_id(twitch_id)
     editors = await _get_editors(seventv_id)
@@ -119,7 +119,7 @@ async def search_emote_by_name(
 
 
 async def _modify_emoteset(
-    emoteset_id: str, action: Action, emote_id: str, *, alias: Optional[str] = None
+    emoteset_id: str, action: Action, emote_id: str, alias: Optional[str] = None
 ) -> Optional[str]:
     headers = {
         "Authorization": f"Bearer {os.environ['SEVEN_TV_TOKEN']}",
@@ -170,7 +170,7 @@ async def add_emote(
     twitch_id: str | int, emote_id: str, alias: Optional[str] = None
 ) -> str:
     emoteset = await emoteset_id(twitch_id)
-    added_emote = await _modify_emoteset(emoteset, Action.ADD, emote_id, alias=alias)
+    added_emote = await _modify_emoteset(emoteset, Action.ADD, emote_id, alias)
     return added_emote
 
 
@@ -181,5 +181,5 @@ async def remove_emote(twitch_id: str | int, emote_id: str) -> None:
 
 async def rename_emote(twitch_id: str | int, emote_id: str, new_name: str) -> None:
     emoteset = await emoteset_id(twitch_id)
-    await _modify_emoteset(emoteset, Action.UPDATE, emote_id, alias=new_name)
+    await _modify_emoteset(emoteset, Action.UPDATE, emote_id, new_name)
 
