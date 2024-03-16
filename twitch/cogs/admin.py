@@ -1,3 +1,4 @@
+import os
 import sys
 
 import twitchio
@@ -112,6 +113,7 @@ class Admin(commands.Cog):
         await database.join_channels_log_only([(str(channel.id), channel.name) for channel in channels])
         for channel in connected_not_log_only:
             self.bot.message_queues.remove_channel(channel)
+            self.bot.emote_patterns.reset_all(channel)
 
 
     @commands.command(aliases=("bonk",), no_global_checks=True)
@@ -147,6 +149,29 @@ class Admin(commands.Cog):
             task.cancel()
         await self.bot.close()
         sys.exit(0)
+
+
+    @commands.command(aliases=("res", "refresh"), no_global_checks=True)
+    async def restart(self, ctx: commands.Context):
+        """Restarts the bot"""
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+
+
+    @commands.command(aliases=("say",), no_global_checks=True)
+    async def echo(self, ctx: commands.Context, *args):
+        """Echos the given message, a channel can be specified"""
+        if len(args) == 0:
+            return
+        if args[0] in [channel.name for channel in self.bot.connected_channels]:
+            if len(args[1:]) == 0:
+                return
+            channel = args[0]
+            message = " ".join(args[1:])
+        else:
+            channel = ctx.channel.name
+            message = " ".join(args)
+        await self.bot.message_queues.queue_message(channel, message)
 
 
 def prepare(bot: commands.Bot):
